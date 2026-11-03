@@ -174,8 +174,9 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
 .contact-option strong { color: var(--gold-light); font-size: 12px; }
 .contact-option small { overflow-wrap: anywhere; color: var(--muted); font-size: 10px; }
 .contact-option > b { color: var(--gold); font-size: 16px; }
-.contact-option .icon-whatsapp, .contact-icon { width: 25px; height: 25px; display: grid; flex: 0 0 auto; place-items: center; color: var(--gold); }
-.contact-option .icon-whatsapp { width: 23px; height: 23px; }
+.contact-option-icon { width: 32px; height: 32px; display: grid; flex: 0 0 32px; place-items: center; border: 1px solid rgba(214,189,121,.38); border-radius: 50%; color: var(--gold); }
+.contact-option-icon use { width: 18px; height: 18px; }
+.contact-option-icon { padding: 6px; }
 .whatsapp-float { position: fixed; z-index: 9; right: max(24px, env(safe-area-inset-right)); bottom: max(24px, env(safe-area-inset-bottom)); width: 58px; height: 58px; display: grid; place-items: center; border: 1px solid var(--gold-light); border-radius: 50%; background: var(--gold); color: var(--black); box-shadow: 0 8px 26px rgba(0,0,0,.4); animation: whatsapp-arrive .45s ease-out both; transition: background .2s ease, transform .2s ease; }
 .whatsapp-float:hover { background: var(--gold-light); transform: translateY(-3px); }
 .whatsapp-float .icon-whatsapp { width: 26px; height: 26px; }

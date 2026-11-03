@@ -1,5 +1,3 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#173b32"/>
-  <path d="M32 12 51 22.5v19L32 52 13 41.5v-19L32 12Z" fill="none" stroke="#e99845" stroke-width="2"/>
-  <path d="M25 22h7.3c8 0 12.7 4.1 12.7 10s-4.7 10-12.7 10H25V22Zm7.2 15.1c4.3 0 6.6-1.8 6.6-5.1s-2.3-5.1-6.6-5.1h-1.1v10.2h1.1Z" fill="#f8f7f2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150">
+  <image href="assets/images/logodomos.jpg" width="150" height="150" preserveAspectRatio="xMidYMid meet"/>
 </svg>

@@ -6,7 +6,8 @@ const DOMUS_CONFIG = Object.freeze({
   metaDescription: "Conheça a Domus Conveniência em Campinas, São José - SC. Praticidade, produtos e conveniência pertinho de você.",
   ogImage: "assets/images/domus-fachada.jpg",
   instagramUrl: "https://www.instagram.com/domusconveniencia.ofic/",
-  whatsappNumber: "",
+  whatsappNumber: "554885003330",
+  whatsappMessage: "Olá! Encontrei a Domus Conveniência pelo site e gostaria de mais informações.",
   coordinates: Object.freeze({
     latitude: -27.5978249,
     longitude: -48.6068827
@@ -93,11 +94,7 @@ const coordinateQuery = `${latitude},${longitude}`;
 const routeUrl = DOMUS_CONFIG.locationUrl ||
   `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(coordinateQuery)}`;
 const map = document.querySelector("#location-map");
-const routeLinks = [
-  document.querySelector("#hero-directions-link"),
-  document.querySelector("#directions-link"),
-  document.querySelector("#footer-directions-link")
-];
+const routeLinks = document.querySelectorAll("[data-route-link], #directions-link");
 
 if (map && Number.isFinite(latitude) && Number.isFinite(longitude)) {
   map.src = `https://maps.google.com/maps?q=${encodeURIComponent(coordinateQuery)}&z=17&output=embed`;
@@ -117,8 +114,9 @@ if (DOMUS_CONFIG.instagramUrl) {
 const whatsappNumber = DOMUS_CONFIG.whatsappNumber.replace(/\D/g, "");
 const whatsappLinks = document.querySelectorAll('[data-contact="whatsapp"]');
 if (/^55\d{10,11}$/.test(whatsappNumber)) {
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(DOMUS_CONFIG.whatsappMessage)}`;
   whatsappLinks.forEach((link) => {
-    link.href = `https://wa.me/${whatsappNumber}`;
+    link.href = whatsappUrl;
     link.hidden = false;
   });
 }

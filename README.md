@@ -41,12 +41,13 @@ As informações editáveis ficam no objeto `DOMUS_CONFIG`, no início de `js/sc
 - `businessLabel` e `locationLabel`: identificação da empresa e localidade
 - `instagramUrl`: perfil oficial
 - `whatsappNumber`: telefone oficial no formato internacional com DDI e DDD; vazio mantém os links ocultos
+- `whatsappMessage`: mensagem inicial codificada nos links do WhatsApp
 - `coordinates`: latitude e longitude usadas pelo mapa e pelo botão de rota
 - `locationUrl` e `address`: link de rota e endereço, ambos opcionais
 - `googleReviewsUrl`, `googleRating` e `googleReviewCount`: avaliação do Google; só são mostrados quando configurados com valores válidos
 
-Não foram incluídos telefone, endereço detalhado, horários, preços, promoções, estoque, nota ou quantidade de avaliações não confirmados. A disponibilidade dos produtos pode variar.
+O número e a mensagem oficial de WhatsApp estão configurados no JavaScript. Endereço detalhado, horários, preços, promoções, estoque e dados de avaliações não confirmados não são exibidos. As categorias refletem as fotografias disponíveis; consulte a loja sobre disponibilidade atual.
 
 ## Imagens
 
-As fotografias da loja ficam em `assets/images/` e são usadas localmente pelo site. Preserve os nomes e caminhos atuais ao substituir uma fotografia. Confirme que há autorização de uso comercial das fotografias publicadas.
+A logo oficial e as fotografias reais ficam em `assets/images/`. O cabeçalho, o rodapé e o favicon usam `logodomos.jpg`. Preserve os nomes e caminhos referenciados no HTML ao substituir uma fotografia. Confirme que há autorização de uso comercial das fotografias publicadas.

@@ -163,8 +163,18 @@ if (hasRating && reviewScore) {
   const countText = document.querySelector("#review-count");
   const roundedRating = Math.round(rating);
   if (stars) {
-    stars.textContent = "★".repeat(roundedRating) + "☆".repeat(5 - roundedRating);
     stars.setAttribute("aria-label", `${rating.toFixed(1)} de 5 estrelas`);
+    stars.replaceChildren();
+    for (let index = 0; index < 5; index += 1) {
+      const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+      icon.setAttribute("class", `review-star ${index < roundedRating ? "is-filled" : "is-empty"}`);
+      icon.setAttribute("viewBox", "0 0 24 24");
+      icon.setAttribute("aria-hidden", "true");
+      use.setAttribute("href", index < roundedRating ? "#icon-star" : "#icon-star-outline");
+      icon.append(use);
+      stars.append(icon);
+    }
   }
   if (ratingText) ratingText.textContent = rating.toFixed(1);
   if (countText) countText.textContent = `${reviewCount} avaliações`;

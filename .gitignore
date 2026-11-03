@@ -30,3 +30,6 @@ temp/
 node_modules/
 dist/
 build/
+
+# Raw Google Maps exports; selected, clearly named copies are used by the site
+assets/images/imgi_*

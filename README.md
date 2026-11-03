@@ -52,6 +52,6 @@ O número e a mensagem oficial de WhatsApp estão configurados no JavaScript. O 
 
 ## Imagens
 
-A logo horizontal oficial e as fotografias reais ficam em `assets/images/`. O cabeçalho, o rodapé e o favicon usam `Logo dourado Domus Conveniência.png`; o arquivo quadrado anterior foi preservado. Preserve os nomes e caminhos referenciados no HTML ao substituir uma fotografia. Confirme que há autorização de uso comercial das fotografias publicadas.
+A logo horizontal oficial e as fotografias reais ficam em `assets/images/`. O cabeçalho, o rodapé e o favicon usam `logo-domus-horizontal.png`; os arquivos anteriores foram preservados. Preserve os nomes e caminhos referenciados no HTML ao substituir uma fotografia. Confirme que há autorização de uso comercial das fotografias publicadas.
 
-A logo horizontal disponível tem 1774 × 887 px e é exibida com `object-fit: contain`, sem esticar ou filtrar o arquivo.
+A logo horizontal disponível tem 2172 × 724 px e é exibida com `object-fit: contain`, sem esticar ou filtrar o arquivo.

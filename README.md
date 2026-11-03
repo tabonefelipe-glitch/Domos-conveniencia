@@ -39,15 +39,19 @@ As informações editáveis ficam no objeto `DOMUS_CONFIG`, no início de `js/sc
 
 - `companyName`: nome da empresa
 - `businessLabel` e `locationLabel`: identificação da empresa e localidade
+- `siteUrl`: domínio público usado pelo canonical e Open Graph
 - `instagramUrl`: perfil oficial
 - `whatsappNumber`: telefone oficial no formato internacional com DDI e DDD; vazio mantém os links ocultos
 - `whatsappMessage`: mensagem inicial codificada nos links do WhatsApp
 - `coordinates`: latitude e longitude usadas pelo mapa e pelo botão de rota
-- `locationUrl` e `address`: link de rota e endereço, ambos opcionais
-- `googleReviewsUrl`, `googleRating` e `googleReviewCount`: avaliação do Google; só são mostrados quando configurados com valores válidos
+- `locationUrl`: perfil do Google Maps usado nos links de localização e avaliações
+- `address`: endereço exibido na seção de contato
+- `googleRating` e `googleReviewCount`: nota média e total de avaliações do Maps
 
-O número e a mensagem oficial de WhatsApp estão configurados no JavaScript. Endereço detalhado, horários, preços, promoções, estoque e dados de avaliações não confirmados não são exibidos. As categorias refletem as fotografias disponíveis; consulte a loja sobre disponibilidade atual.
+O número e a mensagem oficial de WhatsApp estão configurados no JavaScript. O endereço e os dados de reputação foram confirmados na ficha pública do Google Maps; horários, preços, promoções e estoque não são declarados pelo site. As categorias refletem as fotografias disponíveis; consulte a loja sobre disponibilidade atual.
 
 ## Imagens
 
-A logo oficial e as fotografias reais ficam em `assets/images/`. O cabeçalho, o rodapé e o favicon usam `logodomos.jpg`. Preserve os nomes e caminhos referenciados no HTML ao substituir uma fotografia. Confirme que há autorização de uso comercial das fotografias publicadas.
+A logo horizontal oficial e as fotografias reais ficam em `assets/images/`. O cabeçalho, o rodapé e o favicon usam `Logo dourado Domus Conveniência.png`; o arquivo quadrado anterior foi preservado. Preserve os nomes e caminhos referenciados no HTML ao substituir uma fotografia. Confirme que há autorização de uso comercial das fotografias publicadas.
+
+A logo horizontal disponível tem 1774 × 887 px e é exibida com `object-fit: contain`, sem esticar ou filtrar o arquivo.

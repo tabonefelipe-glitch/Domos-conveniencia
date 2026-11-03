@@ -22,7 +22,8 @@ button { color: inherit; font: inherit; }
 .skip-link { position: fixed; z-index: 20; top: 12px; left: 12px; transform: translateY(-160%); padding: 10px 14px; background: var(--cream); color: var(--green); }
 .skip-link:focus { transform: translateY(0); }
 
-.site-header { position: sticky; z-index: 10; top: 0; background: rgba(248, 247, 242, .94); border-bottom: 1px solid rgba(34, 40, 35, .08); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.site-header { position: sticky; z-index: 10; top: 0; background: rgba(248, 247, 242, .94); border-bottom: 1px solid rgba(34, 40, 35, .08); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: background .2s ease, box-shadow .2s ease; }
+.site-header.is-scrolled { background: rgba(248, 247, 242, .88); box-shadow: 0 8px 24px rgba(19, 42, 34, .08); }
 .header-inner { min-height: 82px; display: flex; align-items: center; justify-content: space-between; }
 .wordmark { display: inline-flex; flex-direction: column; width: fit-content; color: var(--green); line-height: 1; }
 .wordmark-main { font-size: 25px; font-weight: 800; letter-spacing: 0; }
@@ -34,6 +35,7 @@ button { color: inherit; font: inherit; }
 .nav-contact:hover { color: var(--cream); background: var(--green); }
 .nav-contact span { margin-left: 9px; }
 .menu-toggle { display: none; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
 
 .hero { position: relative; overflow: hidden; padding: 70px 0 25px; background: var(--cream); }
 .hero-layout { min-height: 555px; display: grid; grid-template-columns: .92fr 1.08fr; align-items: center; gap: 4.5%; }
@@ -50,6 +52,8 @@ h1 em, h2 em { color: var(--green-light); font-style: normal; }
 .button:hover { transform: translateY(-2px); }
 .button-primary { background: var(--green); color: var(--cream); }
 .button-primary:hover { background: var(--green-light); }
+.button-whatsapp { border: 1px solid var(--green); color: var(--green); }
+.button-whatsapp:hover { background: var(--green); color: var(--cream); }
 .button-primary span, .button-light span { color: var(--orange); font-size: 16px; }
 .button-text { min-height: 44px; padding-inline: 0; color: var(--green); }
 .button-text span { color: var(--orange); font-size: 17px; transition: transform .2s ease; }
@@ -81,12 +85,12 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
 .category-card:hover img { opacity: .95; transform: scale(1.045); }
 .category-card::after { position: absolute; inset: 30% 0 0; background: linear-gradient(transparent, rgba(10, 25, 20, .74)); content: ""; pointer-events: none; }
 .category-overlay { position: absolute; z-index: 1; right: 17px; bottom: 17px; left: 19px; display: flex; align-items: end; gap: 9px; }
-.category-overlay h3 { flex: 1; margin: 0; font-size: 19px; font-weight: 600; line-height: 1.2; }
+.category-overlay h3 { flex: 1; min-width: 0; margin: 0; font-size: 19px; font-weight: 600; line-height: 1.2; text-wrap: balance; }
 .category-number { align-self: flex-start; margin-right: auto; color: rgba(255,255,255,.77); font-size: 9px; font-weight: 700; letter-spacing: .1em; }
 .category-arrow { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgba(255,255,255,.55); border-radius: 50%; font-size: 14px; transition: color .2s ease, background .2s ease; }
 .category-card:hover .category-arrow { background: var(--orange); color: var(--green); }
 .category-card-everyday { display: flex; align-items: center; justify-content: center; background: var(--green); }
-.category-card-everyday::after { display: none; }
+.category-card-everyday::after { display: block; }
 .everyday-mark { color: rgba(248,247,242,.12); font-size: 140px; font-weight: 800; line-height: 1; }
 .everyday-mark span { color: var(--orange); }
 .category-disclaimer { margin: 17px 0 0; color: var(--muted); font-size: 10px; }
@@ -112,10 +116,21 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
 .location .eyebrow { color: #d7dfd7; }
 .button-light { background: var(--cream); color: var(--green); }
 .button-light:hover { background: var(--orange); }
+.location-address { margin: -22px 0 24px; color: rgba(248,247,242,.8); font-size: 12px; font-weight: 600; }
 .map-frame { position: relative; height: 390px; overflow: hidden; background: #d9ded6; }
 .map-frame iframe { width: 100%; height: 100%; border: 0; filter: saturate(.72); }
 .map-label { position: absolute; bottom: 20px; left: 20px; display: flex; align-items: center; gap: 9px; padding: 12px 15px; background: var(--cream); color: var(--green); font-size: 9px; font-weight: 800; letter-spacing: .1em; pointer-events: none; }
 .location-note { margin: 12px 0 0; color: rgba(248,247,242,.66); font-size: 10px; }
+
+.reviews { background: var(--paper); }
+.reviews-layout { display: flex; align-items: center; justify-content: space-between; gap: 36px; }
+.reviews-copy h2 { max-width: 640px; margin-bottom: 16px; font-size: clamp(32px, 3.5vw, 46px); }
+.reviews-copy > p:last-child { margin-bottom: 0; color: var(--muted); font-size: 13px; }
+.reviews-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 24px; }
+.review-score { display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 10px; color: var(--green); }
+.review-stars { grid-column: 1 / -1; color: var(--orange); font-size: 21px; letter-spacing: 0; white-space: nowrap; }
+.review-rating { font-size: 23px; font-weight: 800; line-height: 1.2; }
+.review-count { color: var(--muted); font-size: 10px; }
 
 .social { overflow: hidden; background: var(--cream); }
 .social-layout { display: grid; grid-template-columns: .8fr 1.2fr; align-items: center; gap: 8%; }
@@ -168,6 +183,8 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
   .about-photo { min-height: 390px; }
   .social-layout { gap: 5%; }
   .social-grid { grid-template-rows: 175px 175px; }
+  .reviews-layout { align-items: flex-start; flex-direction: column; gap: 24px; }
+  .reviews-actions { flex-wrap: wrap; }
 }
 
 @media (max-width: 640px) {
@@ -176,7 +193,7 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
   .section-pad { padding-block: 70px; }
   .header-inner { min-height: 70px; }
   .wordmark-main { font-size: 23px; }
-  .menu-toggle { position: relative; z-index: 12; display: flex; width: 42px; height: 42px; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+  .menu-toggle { position: relative; z-index: 12; display: flex; width: 44px; height: 44px; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: transparent; cursor: pointer; }
   .menu-toggle span { width: 17px; height: 1px; background: var(--green); transition: transform .2s ease; }
   .menu-toggle[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }
   .menu-toggle[aria-expanded="true"] span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
@@ -209,7 +226,7 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
   .category-card-wide { grid-column: span 2; }
   .category-card-everyday { grid-column: span 2; }
   .category-overlay { right: 11px; bottom: 12px; left: 12px; gap: 6px; }
-  .category-overlay h3 { font-size: 14px; }
+  .category-overlay h3 { font-size: 13px; }
   .category-number { font-size: 8px; }
   .category-arrow { width: 25px; height: 25px; font-size: 12px; }
   .everyday-mark { font-size: 100px; }
@@ -223,12 +240,15 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
   .about-copy > p:not(.eyebrow) { font-size: 12px; }
   .about-signature { font-size: 42px; }
   .location-heading { align-items: flex-start; }
+  .location-address { margin: -9px 0 19px; }
   .map-frame { height: 320px; }
   .map-label { bottom: 12px; left: 12px; padding: 10px 12px; font-size: 8px; }
   .social-layout { grid-template-columns: 1fr; gap: 36px; }
   .social-grid { grid-template-rows: minmax(150px, 44vw) minmax(150px, 44vw); gap: 9px; }
   .social-tile-message { padding: 15px; }
   .social-tile-message p { font-size: 20px; }
+  .reviews-actions { gap: 16px; }
+  .reviews-actions .button { min-height: 48px; }
   .footer-main { grid-template-columns: 1fr 1fr; gap: 32px 18px; padding-bottom: 35px; }
   .footer-brand { grid-column: span 2; }
   .footer-bottom { align-items: flex-start; flex-direction: column; gap: 8px; font-size: 8px; }

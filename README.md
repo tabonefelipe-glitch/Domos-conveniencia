@@ -1,6 +1,6 @@
 # DOMUS CONVENIÊNCIA
 
-Landing page institucional estática para apresentar a Domus Conveniência, suas categorias ilustrativas, localização e canais oficiais.
+Landing page institucional estática da DOMUS CONVENIÊNCIA em Campinas, São José - SC, com fotografias locais, localização e canais oficiais.
 
 ## Tecnologias
 
@@ -38,12 +38,15 @@ O site também pode ser hospedado em qualquer serviço que sirva arquivos estát
 As informações editáveis ficam no objeto `DOMUS_CONFIG`, no início de `js/script.js`:
 
 - `companyName`: nome da empresa
-- `instagram`: perfil oficial
+- `businessLabel` e `locationLabel`: identificação da empresa e localidade
+- `instagramUrl`: perfil oficial
+- `whatsappNumber`: telefone oficial no formato internacional com DDI e DDD; vazio mantém os links ocultos
 - `coordinates`: latitude e longitude usadas pelo mapa e pelo botão de rota
-- `whatsappNumber`: número internacional apenas com dígitos; vazio mantém o link de WhatsApp oculto
+- `locationUrl` e `address`: link de rota e endereço, ambos opcionais
+- `googleReviewsUrl`, `googleRating` e `googleReviewCount`: avaliação do Google; só são mostrados quando configurados com valores válidos
 
-Não foram incluídos telefone, endereço detalhado, horários, preços, promoções, estoque ou avaliações não confirmados. As categorias são ilustrativas; confirme o mix de produtos antes de atualizar os textos.
+Não foram incluídos telefone, endereço detalhado, horários, preços, promoções, estoque, nota ou quantidade de avaliações não confirmados. A disponibilidade dos produtos pode variar.
 
 ## Imagens
 
-As imagens de demonstração ficam em `assets/images/`. Substitua cada arquivo mantendo o mesmo nome e formato para atualizar as fotografias sem alterar os caminhos no HTML. Confirme que há autorização de uso das fotografias publicadas.
+As fotografias da loja ficam em `assets/images/` e são usadas localmente pelo site. Preserve os nomes e caminhos atuais ao substituir uma fotografia. Confirme que há autorização de uso comercial das fotografias publicadas.

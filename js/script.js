@@ -2,7 +2,7 @@ const DOMUS_CONFIG = Object.freeze({
   companyName: "DOMUS CONVENIÊNCIA",
   businessLabel: "DOMUS CONVENIÊNCIA | CAMPINAS, SÃO JOSÉ - SC",
   locationLabel: "Campinas, São José - SC",
-  siteUrl: "https://domos-conveniencia.onrender.com/",
+  siteUrl: "https://domus-conveniencia.onrender.com/",
   pageTitle: "Domus Conveniência | São José - SC",
   metaDescription: "Conheça a Domus Conveniência em Campinas, São José - SC. Praticidade, produtos e conveniência pertinho de você.",
   ogImage: "assets/images/domus-fachada.jpg",
@@ -15,6 +15,10 @@ const DOMUS_CONFIG = Object.freeze({
   }),
   locationUrl: "https://www.google.com/maps/place/Domus+conveni%C3%AAncia/@-27.5978249,-48.6831004,13z/data=!4m10!1m2!2m1!1sdomos+conveniencia!3m6!1s0x952737da655f590d:0x59d4eefe6db66bfc!8m2!3d-27.5978249!4d-48.6068827!15sChJkb21vcyBjb252ZW5pZW5jaWFaFCISZG9tb3MgY29udmVuaWVuY2lhkgERY29udmVuaWVuY2Vfc3RvcmWaAURDaTlEUVVsUlFVTnZaRU5vZEhsalJqbHZUMjVHYldWRWJGTmFWR1JxWlVjeGVsTnRkM1JOUm5BMFpHdDRlRll6WXhBQuABAPoBBAgAECE!16s%2Fg%2F11zbk43z6d?entry=ttu&g_ep=EgoyMDI2MTAyOC4wIKXMDSoASAFQAw%3D%3D",
   address: "R. Quinze de Novembro, 150 - Sl 21 - Campinas, São José - SC, 88101-440",
+  businessHours: "",
+  delivery: "",
+  pickup: "",
+  paymentMethods: "",
   googleRating: 5.0,
   googleReviewCount: 49
 });
@@ -47,6 +51,20 @@ document.querySelectorAll("[data-business-label]").forEach((label) => {
 document.querySelectorAll("[data-location-label]").forEach((label) => {
   label.textContent = DOMUS_CONFIG.address || DOMUS_CONFIG.locationLabel;
 });
+const businessDetails = document.querySelector("#business-details");
+let hasBusinessDetails = false;
+document.querySelectorAll("[data-business-field]").forEach((field) => {
+  const value = DOMUS_CONFIG[field.dataset.businessField];
+  if (typeof value === "string" && value.trim()) {
+    const output = field.querySelector("dd");
+    if (output) {
+      output.textContent = value.trim();
+      field.hidden = false;
+      hasBusinessDetails = true;
+    }
+  }
+});
+if (businessDetails) businessDetails.hidden = !hasBusinessDetails;
 document.querySelectorAll("[data-company-name]").forEach((label) => {
   label.textContent = DOMUS_CONFIG.companyName;
 });

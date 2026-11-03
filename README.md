@@ -46,6 +46,7 @@ As informações editáveis ficam no objeto `DOMUS_CONFIG`, no início de `js/sc
 - `coordinates`: latitude e longitude usadas pelo mapa e pelo botão de rota
 - `locationUrl`: perfil do Google Maps usado nos links de localização e avaliações
 - `address`: endereço exibido na seção de contato
+- `businessHours`, `delivery`, `pickup` e `paymentMethods`: dados comerciais opcionais; vazios por padrão e ocultos até confirmação
 - `googleRating` e `googleReviewCount`: nota média e total de avaliações do Maps
 
 O número e a mensagem oficial de WhatsApp estão configurados no JavaScript. O endereço e os dados de reputação foram confirmados na ficha pública do Google Maps; horários, preços, promoções e estoque não são declarados pelo site. As categorias refletem as fotografias disponíveis; consulte a loja sobre disponibilidade atual.

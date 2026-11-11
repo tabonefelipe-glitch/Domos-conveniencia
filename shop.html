@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090908" />
+    <meta name="description" content="Loja virtual da Domus Conveniência." />
+    <title>Loja | Domus Conveniência</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/store.js" defer></script>
+  </head>
+  <body class="store-body">
+    <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <symbol id="icon-cart" viewBox="0 0 24 24">
+        <path d="M3 4h2l2.2 9.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.76L19 7H7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="10" cy="18.5" r="1.4" fill="currentColor"/>
+        <circle cx="17" cy="18.5" r="1.4" fill="currentColor"/>
+      </symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M16 16l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-minus" viewBox="0 0 24 24">
+        <path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="icon-trash" viewBox="0 0 24 24">
+        <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24">
+        <path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+    </svg>
+
+    <header class="site-header store-header-bar">
+      <div class="container header-inner">
+        <a class="brand-logo" href="/" aria-label="Domus Conveniência, voltar ao início">
+          <img src="assets/images/logo-domus-horizontal.png" alt="Logo da Domus Conveniência" width="2172" height="724" />
+        </a>
+        <nav class="site-nav" aria-label="Navegação da loja">
+          <a href="/">Início</a>
+          <a href="/shop.html">Loja</a>
+          <a href="/admin">Admin</a>
+          <button class="cart-trigger" type="button" data-cart-trigger aria-label="Abrir carrinho">
+            <svg class="icon-cart" aria-hidden="true"><use href="#icon-cart"></use></svg>
+            <span>Carrinho</span>
+            <b class="cart-count-badge" data-cart-count>0</b>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="store-main">
+      <section class="store-hero">
+        <div class="container store-hero-inner">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span> Domus e-commerce</p>
+            <h1>Seu mercado de conveniência <em>completa a rotina.</em></h1>
+          </div>
+          <a class="button button-primary" href="#produtos">Ver produtos</a>
+        </div>
+      </section>
+
+      <section class="container shop-section" id="produtos">
+        <div class="shop-toolbar">
+          <div class="search-box">
+            <svg class="icon-inline" aria-hidden="true"><use href="#icon-search"></use></svg>
+            <input id="productSearch" type="search" placeholder="Buscar produto" aria-label="Buscar produto" />
+          </div>
+          <div class="toolbar-controls">
+            <label>
+              <span>Categoria</span>
+              <select id="categoryFilter">
+                <option value="all">Todas</option>
+              </select>
+            </label>
+            <label>
+              <span>Ordenar</span>
+              <select id="sortSelect">
+                <option value="featured">Destaques</option>
+                <option value="price_asc">Menor preço</option>
+                <option value="price_desc">Maior preço</option>
+                <option value="name_asc">Nome</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div id="productGrid" class="product-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <aside class="cart-drawer" id="cartDrawer" aria-label="Carrinho de compras" aria-hidden="true">
+      <div class="cart-header">
+        <h2>Seu carrinho</h2>
+        <button class="icon-button" type="button" id="cartClose" aria-label="Fechar carrinho">
+          <svg class="icon-inline" aria-hidden="true"><use href="#icon-close"></use></svg>
+        </button>
+      </div>
+      <div id="cartList" class="cart-list"></div>
+      <div class="cart-summary">
+        <div class="summary-row"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
+        <div class="summary-row"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
+        <button type="button" class="button button-primary cart-submit" id="checkoutBtn">Finalizar pedido</button>
+        <button type="button" class="button button-secondary cart-clear" id="clearCartBtn">Limpar carrinho</button>
+      </div>
+    </aside>
+
+    <div class="modal-backdrop hidden" id="productModal">
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+        <button type="button" class="icon-button modal-close" id="modalClose" aria-label="Fechar visualização do produto">
+          <svg class="icon-inline" aria-hidden="true"><use href="#icon-close"></use></svg>
+        </button>
+        <div id="modalContent" class="modal-content"></div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="checkoutModal">
+      <div class="modal-panel checkout-panel" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+        <button type="button" class="icon-button modal-close" id="checkoutClose" aria-label="Fechar pedido">
+          <svg class="icon-inline" aria-hidden="true"><use href="#icon-close"></use></svg>
+        </button>
+        <h2 id="checkoutTitle">Finalizar pedido</h2>
+        <form id="checkoutForm" class="checkout-form">
+          <label>
+            <span>Nome do cliente</span>
+            <input type="text" name="customerName" required />
+          </label>
+          <label>
+            <span>Tipo de atendimento</span>
+            <select name="orderType" id="orderType">
+              <option value="retirada">Retirada na loja</option>
+              <option value="delivery">Delivery</option>
+            </select>
+          </label>
+          <label id="addressField" class="hidden">
+            <span>Endereço de entrega</span>
+            <textarea name="address" rows="3" placeholder="Rua, número, bairro e referência"></textarea>
+          </label>
+          <label>
+            <span>Forma de pagamento</span>
+            <select name="paymentMethod">
+              <option value="Pix">Pix</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão">Cartão</option>
+            </select>
+          </label>
+          <label>
+            <span>Observações</span>
+            <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
+          </label>
+          <button type="submit" class="button button-primary">Revisar pedido</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-backdrop hidden" id="reviewModal">
+      <div class="modal-panel review-panel" role="dialog" aria-modal="true" aria-labelledby="reviewTitle">
+        <button type="button" class="icon-button modal-close" id="reviewClose" aria-label="Fechar revisão do pedido">
+          <svg class="icon-inline" aria-hidden="true"><use href="#icon-close"></use></svg>
+        </button>
+        <h2 id="reviewTitle">Revisar pedido</h2>
+        <div id="reviewContent" class="review-content"></div>
+        <button type="button" class="button button-primary" id="sendToWhatsApp">Enviar pedido pelo WhatsApp</button>
+      </div>
+    </div>
+
+    <button class="whatsapp-float" type="button" id="floatingCartButton" data-tooltip="Carrinho" aria-label="Abrir carrinho">
+      <svg class="icon-cart" aria-hidden="true"><use href="#icon-cart"></use></svg>
+    </button>
+  </body>
+</html>

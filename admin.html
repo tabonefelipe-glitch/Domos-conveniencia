@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090908" />
+    <title>Painel administrativo | Domus Conveniência</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/admin.js" defer></script>
+  </head>
+  <body class="admin-body">
+    <header class="admin-header">
+      <div class="container admin-topbar">
+        <a class="brand-logo" href="/" aria-label="Voltar para o site">
+          <img src="assets/images/logo-domus-horizontal.png" alt="Logo da Domus Conveniência" width="2172" height="724" />
+        </a>
+        <div class="admin-actions">
+          <a class="button button-text" href="/shop.html">Abrir loja</a>
+          <button class="button button-primary hidden" id="logoutBtn" type="button">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <section id="loginSection" class="container admin-card login-box hidden">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-line"></span> Acesso restrito</p>
+          <h1>Painel administrativo</h1>
+        </div>
+        <form id="loginForm" class="admin-form">
+          <label>
+            <span>E-mail</span>
+            <input type="email" name="email" placeholder="admin@domus.com" required />
+          </label>
+          <label>
+            <span>Senha</span>
+            <input type="password" name="password" placeholder="Sua senha" required />
+          </label>
+          <button type="submit" class="button button-primary">Entrar</button>
+        </form>
+      </section>
+
+      <section id="adminDashboard" class="container admin-dashboard hidden">
+        <div class="admin-card stats-grid">
+          <div class="stat-card"><span>Total de produtos</span><strong id="statTotalProducts">0</strong></div>
+          <div class="stat-card"><span>Produtos ativos</span><strong id="statActiveProducts">0</strong></div>
+          <div class="stat-card"><span>Indisponíveis</span><strong id="statUnavailableProducts">0</strong></div>
+          <div class="stat-card"><span>Em promoção</span><strong id="statPromoProducts">0</strong></div>
+          <div class="stat-card"><span>Total de categorias</span><strong id="statTotalCategories">0</strong></div>
+        </div>
+
+        <div class="admin-layout">
+          <section class="admin-card">
+            <div class="section-header"><h2>Categorias</h2></div>
+            <form id="categoryForm" class="admin-form compact-form">
+              <input type="hidden" name="categoryId" />
+              <label>
+                <span>Nome</span>
+                <input type="text" name="categoryName" placeholder="Ex.: Bebidas" required />
+              </label>
+              <label>
+                <span>Status</span>
+                <select name="categoryStatus">
+                  <option value="active">Ativa</option>
+                  <option value="inactive">Inativa</option>
+                </select>
+              </label>
+              <div class="form-actions">
+                <button type="submit" class="button button-primary">Salvar</button>
+                <button type="button" class="button button-secondary" id="resetCategoryForm">Cancelar</button>
+              </div>
+            </form>
+            <div id="categoryList" class="list-panel"></div>
+          </section>
+
+          <section class="admin-card">
+            <div class="section-header"><h2>Produtos</h2></div>
+            <form id="productForm" class="admin-form compact-form">
+              <input type="hidden" name="productId" />
+              <label>
+                <span>Nome</span>
+                <input type="text" name="name" required />
+              </label>
+              <label>
+                <span>Categoria</span>
+                <select name="categoryId" id="productCategorySelect"></select>
+              </label>
+              <label class="full-width">
+                <span>Descrição</span>
+                <textarea name="description" rows="3"></textarea>
+              </label>
+              <label>
+                <span>Preço</span>
+                <input type="number" step="0.01" name="price" min="0" required />
+              </label>
+              <label>
+                <span>Preço promocional</span>
+                <input type="number" step="0.01" name="promotionalPrice" min="0" />
+              </label>
+              <label>
+                <span>Estoque</span>
+                <input type="number" name="stock" min="0" value="0" />
+              </label>
+              <label>
+                <span>Unidade</span>
+                <input type="text" name="unit" value="unidade" />
+              </label>
+              <label>
+                <span>Imagem</span>
+                <input type="url" name="image" placeholder="https://..." />
+              </label>
+              <label>
+                <span>Arquivo</span>
+                <input type="file" name="productImage" accept="image/*" />
+              </label>
+              <label>
+                <span>Status</span>
+                <select name="status">
+                  <option value="active">Ativo</option>
+                  <option value="inactive">Inativo</option>
+                </select>
+              </label>
+              <label>
+                <span>Disponibilidade</span>
+                <select name="available">
+                  <option value="1">Disponível</option>
+                  <option value="0">Indisponível</option>
+                </select>
+              </label>
+              <label>
+                <span>Destaque</span>
+                <select name="featured">
+                  <option value="0">Não</option>
+                  <option value="1">Sim</option>
+                </select>
+              </label>
+              <label>
+                <span>Promoção</span>
+                <select name="promotion">
+                  <option value="0">Não</option>
+                  <option value="1">Sim</option>
+                </select>
+              </label>
+              <div class="form-actions full-width">
+                <button type="submit" class="button button-primary">Salvar produto</button>
+                <button type="button" class="button button-secondary" id="resetProductForm">Cancelar</button>
+              </div>
+            </form>
+            <div id="productList" class="list-panel"></div>
+          </section>
+
+          <section class="admin-card">
+            <div class="section-header"><h2>Configurações da loja</h2></div>
+            <form id="settingsForm" class="admin-form compact-form">
+              <label>
+                <span>Nome da loja</span>
+                <input type="text" name="storeName" />
+              </label>
+              <label>
+                <span>Número do WhatsApp</span>
+                <input type="text" name="whatsappNumber" placeholder="554885003330" />
+              </label>
+              <label class="full-width">
+                <span>Mensagem inicial do pedido</span>
+                <textarea name="whatsappMessage" rows="3"></textarea>
+              </label>
+              <label>
+                <span>Delivery</span>
+                <select name="deliveryEnabled">
+                  <option value="1">Habilitado</option>
+                  <option value="0">Desabilitado</option>
+                </select>
+              </label>
+              <label>
+                <span>Retirada</span>
+                <select name="pickupEnabled">
+                  <option value="1">Habilitado</option>
+                  <option value="0">Desabilitado</option>
+                </select>
+              </label>
+              <label class="full-width">
+                <span>Informações de contato</span>
+                <textarea name="contactInfo" rows="3"></textarea>
+              </label>
+              <div class="form-actions full-width">
+                <button type="submit" class="button button-primary">Salvar configurações</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

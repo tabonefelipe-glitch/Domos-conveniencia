@@ -32,7 +32,7 @@ async function checkAuth() {
       showElement(document.getElementById('loginSection'), true);
       showElement(document.getElementById('adminDashboard'), false);
       showElement(document.getElementById('logoutBtn'), false);
-      return;
+      return false;
     }
 
     state.isAuthenticated = true;
@@ -40,8 +40,10 @@ async function checkAuth() {
     showElement(document.getElementById('adminDashboard'), true);
     showElement(document.getElementById('logoutBtn'), true);
     await Promise.all([loadDashboard(), loadCategories(), loadProducts(), loadSettings()]);
+    return true;
   } catch (error) {
     console.error(error);
+    return false;
   }
 }
 
@@ -310,20 +312,28 @@ async function login(event) {
   const email = form.email.value.trim();
   const password = form.password.value;
 
-  const response = await fetch('/api/admin/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
+  try {
+    const response = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-  const payload = await response.json();
-  if (!response.ok) {
-    alert(payload.message || 'Erro ao fazer login.');
-    return;
+    const payload = await response.json();
+    if (!response.ok) {
+      alert(payload.message || 'Erro ao fazer login.');
+      return;
+    }
+
+    form.reset();
+    const sessionRestored = await checkAuth();
+    if (!sessionRestored) {
+      alert('O login foi aceito, mas a sessão não foi restaurada. Consulte os logs do servidor com scope "admin-auth".');
+    }
+  } catch (error) {
+    console.error('Falha de comunicação durante o login administrativo.', error);
+    alert('Não foi possível concluir o login. Verifique a conexão e tente novamente.');
   }
-
-  form.reset();
-  checkAuth();
 }
 
 async function logout() {

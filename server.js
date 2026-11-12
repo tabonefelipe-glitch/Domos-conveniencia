@@ -157,6 +157,21 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+function logAdminAuth(event, req, details = {}) {
+  const cookies = String(req.headers.cookie || '').split(';');
+  const hasSessionCookie = cookies.some((cookie) => cookie.trim().startsWith('connect.sid='));
+  console.info(JSON.stringify({
+    scope: 'admin-auth',
+    event,
+    database: usePostgres ? 'postgres' : 'sqlite',
+    secureRequest: req.secure,
+    forwardedProto: req.get('x-forwarded-proto') || null,
+    trustProxy: app.get('trust proxy'),
+    hasSessionCookie,
+    ...details
+  }));
+}
+
 function normalizePostgresSql(sql, params) {
   let normalizedSql = sql;
 
@@ -588,25 +603,42 @@ app.post('/api/admin/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
+      logAdminAuth('login_rejected', req, { reason: 'missing_credentials' });
       return res.status(400).json({ message: 'E-mail e senha são obrigatórios.' });
     }
 
-    const user = await dbGet('SELECT * FROM admin_users WHERE email = ?', [String(email).trim()]);
+    const submittedEmail = String(email).trim();
+    const user = await dbGet('SELECT * FROM admin_users WHERE email = ?', [submittedEmail]);
     if (!user) {
+      logAdminAuth('login_rejected', req, {
+        reason: 'admin_user_not_found',
+        matchesConfiguredAdmin: submittedEmail.toLowerCase() === String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
+      });
       return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
 
     const passwordMatches = await bcrypt.compare(String(password), user.password_hash);
     if (!passwordMatches) {
+      logAdminAuth('login_rejected', req, {
+        reason: 'password_mismatch',
+        matchesConfiguredAdmin: submittedEmail.toLowerCase() === String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
+      });
       return res.status(401).json({ message: 'Credenciais inválidas.' });
     }
 
+    await new Promise((resolve, reject) => {
+      req.session.regenerate((error) => error ? reject(error) : resolve());
+    });
     req.session.userId = user.id;
     req.session.userName = user.name;
     req.session.userEmail = user.email;
+    await new Promise((resolve, reject) => {
+      req.session.save((error) => error ? reject(error) : resolve());
+    });
+    logAdminAuth('login_succeeded', req, { sessionSaved: true });
     res.json({ message: 'Login realizado com sucesso.', user: { id: user.id, name: user.name, email: user.email } });
   } catch (error) {
-    console.error('Falha ao autenticar administrador:', error);
+    logAdminAuth('login_error', req, { errorName: error.name, errorCode: error.code || null });
     res.status(500).json({ message: 'Erro ao tentar autenticar.' });
   }
 });
@@ -619,9 +651,15 @@ app.post('/api/admin/logout', requireAdmin, (req, res) => {
 
 app.get('/api/admin/me', (req, res) => {
   if (!req.session || !req.session.userId) {
+    const cookies = String(req.headers.cookie || '').split(';');
+    const hasSessionCookie = cookies.some((cookie) => cookie.trim().startsWith('connect.sid='));
+    logAdminAuth('session_missing', req, {
+      reason: hasSessionCookie ? 'session_cookie_not_found_in_store' : 'no_session_cookie'
+    });
     return res.status(401).json({ authenticated: false });
   }
 
+  logAdminAuth('session_authenticated', req);
   res.json({ authenticated: true, user: { id: req.session.userId, name: req.session.userName, email: req.session.userEmail } });
 });
 

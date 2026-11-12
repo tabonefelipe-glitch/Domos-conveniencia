@@ -354,6 +354,12 @@ async function initializeDatabase() {
 
   const defaultEmail = process.env.ADMIN_EMAIL || 'admin@domus.com';
   const defaultPassword = process.env.ADMIN_PASSWORD || 'domus123';
+  const hasExistingStoreData = Boolean(
+    await dbGet('SELECT id FROM admin_users LIMIT 1') ||
+    await dbGet('SELECT key FROM store_settings LIMIT 1') ||
+    await dbGet('SELECT id FROM categories LIMIT 1') ||
+    await dbGet('SELECT id FROM products LIMIT 1')
+  );
   const adminExists = await dbGet('SELECT id, password_hash FROM admin_users WHERE email = ?', [defaultEmail]);
 
   if (!adminExists) {
@@ -381,12 +387,18 @@ async function initializeDatabase() {
     'Outros'
   ];
 
-  for (const categoryName of seedCategories) {
-    if (usePostgres) {
-      await dbRun('INSERT INTO categories (name, status) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING', [categoryName, 'active']);
-    } else {
-      await dbRun(`INSERT OR IGNORE INTO categories (name, status) VALUES (?, 'active')`, [categoryName]);
+  const categorySeedMarker = await dbGet('SELECT value FROM store_settings WHERE key = ?', ['_default_categories_seeded']);
+  if (!categorySeedMarker) {
+    if (!hasExistingStoreData) {
+      for (const categoryName of seedCategories) {
+        if (usePostgres) {
+          await dbRun('INSERT INTO categories (name, status) VALUES ($1, $2) ON CONFLICT (name) DO NOTHING', [categoryName, 'active']);
+        } else {
+          await dbRun(`INSERT OR IGNORE INTO categories (name, status) VALUES (?, 'active')`, [categoryName]);
+        }
+      }
     }
+    await dbRun('INSERT INTO store_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO NOTHING', ['_default_categories_seeded', '1']);
   }
 
   const settingsMap = {

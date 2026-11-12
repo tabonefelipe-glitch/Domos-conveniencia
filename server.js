@@ -430,8 +430,8 @@ async function getDashboardStats() {
     SELECT
       (SELECT COUNT(*) FROM products) AS totalProducts,
       (SELECT COUNT(*) FROM products WHERE status = 'active') AS activeProducts,
-      (SELECT COUNT(*) FROM products WHERE available = 0 OR status = 'inactive') AS unavailableProducts,
-      (SELECT COUNT(*) FROM products WHERE promotion = 1) AS promoProducts,
+      (SELECT COUNT(*) FROM products WHERE available = FALSE OR status = 'inactive') AS unavailableProducts,
+      (SELECT COUNT(*) FROM products WHERE promotion = TRUE) AS promoProducts,
       (SELECT COUNT(*) FROM categories) AS totalCategories
   `);
 

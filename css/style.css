@@ -1248,21 +1248,21 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
 .pagination .icon-button { width: 27px; height: 27px; border-color: #e8e4db; background: #fff; font-size: 19px; line-height: 1; }
 .pagination .icon-button:disabled { background: #f6f5f2; }
 
-.category-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.category-card { min-width: 0; min-height: 150px; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; grid-template-rows: 1fr auto; align-items: start; gap: 11px; padding: 17px; border: 1px solid var(--admin-line); border-radius: 5px; background: #fff; box-shadow: 0 2px 8px rgba(38, 33, 22, .025); }
-.category-card-icon { width: 40px; height: 40px; display: grid; grid-row: span 1; place-items: center; border-radius: 4px; background: #f7f3e7; color: #a8832d; }
-.category-card-icon svg { width: 18px; height: 18px; }
-.category-card-info { min-width: 0; padding-top: 2px; }
-.category-card-info h3 { margin: 0 0 4px; overflow-wrap: anywhere; color: #2f2d28; font-size: 12px; font-weight: 800; }
-.category-card-info p { margin: 0; color: var(--admin-muted); font-size: 10px; }
-.category-card > .status-pill { grid-column: 3; grid-row: 1; }
-.category-card-actions { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid #f0eee9; }
+.admin-body .category-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.admin-body .category-card { min-width: 0; min-height: 150px; display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; grid-template-rows: 1fr auto; align-items: start; gap: 11px; padding: 17px; border: 1px solid var(--admin-line); border-radius: 5px; background: #fff; box-shadow: 0 2px 8px rgba(38, 33, 22, .025); }
+.admin-body .category-card-icon { width: 40px; height: 40px; display: grid; grid-row: span 1; place-items: center; border-radius: 4px; background: #f7f3e7; color: #a8832d; }
+.admin-body .category-card-icon svg { width: 18px; height: 18px; }
+.admin-body .category-card-info { min-width: 0; padding-top: 2px; }
+.admin-body .category-card-info h3 { margin: 0 0 4px; overflow-wrap: anywhere; color: #2f2d28; font-size: 12px; font-weight: 800; }
+.admin-body .category-card-info p { margin: 0; color: var(--admin-muted); font-size: 10px; }
+.admin-body .category-card > .status-pill { grid-column: 3; grid-row: 1; }
+.admin-body .category-card-actions { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid #f0eee9; }
 .admin-empty-state { min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 35px 20px; border: 1px dashed #ded9ce; border-radius: 5px; background: rgba(255, 255, 255, .7); text-align: center; }
 .admin-empty-state h2,
 .admin-empty-state h3 { margin: 10px 0 5px; color: #34322e; font-size: 17px; }
 .admin-empty-state p { max-width: 390px; margin: 0 0 17px; color: var(--admin-muted); font-size: 11px; }
 .empty-symbol { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 50%; background: #f5f0e2; color: #a8832d; }
-.category-empty { grid-column: 1 / -1; min-height: 330px; }
+.admin-body .category-empty { grid-column: 1 / -1; min-height: 330px; }
 
 .settings-form { display: grid; gap: 13px; }
 .settings-panel { padding: 19px 21px 22px; }
@@ -1417,14 +1417,14 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
   .table-scroll { overflow-x: auto; }
   .products-table { min-width: 980px; }
   .table-footer { padding-inline: 11px; font-size: 9px; }
-  .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .category-card { min-height: 145px; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; padding: 12px; }
-  .category-card-icon { width: 32px; height: 32px; }
-  .category-card-icon svg { width: 15px; height: 15px; }
-  .category-card > .status-pill { grid-column: 2; grid-row: 2; }
-  .category-card-actions { grid-row: 3; }
-  .category-card-info h3 { font-size: 10px; }
-  .category-card-info p { font-size: 9px; }
+  .admin-body .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .admin-body .category-card { min-height: 145px; grid-template-columns: 34px minmax(0, 1fr); gap: 8px; padding: 12px; }
+  .admin-body .category-card-icon { width: 32px; height: 32px; }
+  .admin-body .category-card-icon svg { width: 15px; height: 15px; }
+  .admin-body .category-card > .status-pill { grid-column: 2; grid-row: 2; }
+  .admin-body .category-card-actions { grid-row: 3; }
+  .admin-body .category-card-info h3 { font-size: 10px; }
+  .admin-body .category-card-info p { font-size: 9px; }
   .settings-fields-two,
   .settings-toggles { grid-template-columns: 1fr; }
   .settings-panel { padding: 16px 14px; }
@@ -1451,10 +1451,10 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
   .page-intro > .admin-button { align-self: flex-start; }
   .quick-actions { width: 100%; }
   .quick-actions .admin-button { flex: 1; }
-  .category-grid { grid-template-columns: 1fr; }
-  .category-card { grid-template-columns: 38px minmax(0, 1fr) auto; }
-  .category-card > .status-pill { grid-column: 3; grid-row: 1; }
-  .category-card-actions { grid-column: 1 / -1; grid-row: 2; }
+  .admin-body .category-grid { grid-template-columns: 1fr; }
+  .admin-body .category-card { grid-template-columns: 38px minmax(0, 1fr) auto; }
+  .admin-body .category-card > .status-pill { grid-column: 3; grid-row: 1; }
+  .admin-body .category-card-actions { grid-column: 1 / -1; grid-row: 2; }
   .display-section .editor-toggles { grid-template-columns: 1fr; }
   .editor-fields { grid-template-columns: 1fr; }
   .field-span-two { grid-column: auto; }

@@ -5,6 +5,12 @@ const state = {
   settings: {},
 };
 
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+
 function showElement(element, visible) {
   if (!element) return;
   element.classList.toggle('hidden', !visible);
@@ -55,14 +61,14 @@ async function loadCategories() {
   const categorySelect = document.getElementById('productCategorySelect');
 
   if (categorySelect) {
-    categorySelect.innerHTML = categories.map((category) => `<option value="${category.id}">${category.name}</option>`).join('');
+    categorySelect.innerHTML = categories.map((category) => `<option value="${Number(category.id)}">${escapeHTML(category.name)}</option>`).join('');
   }
 
   if (list) {
     list.innerHTML = categories.length
       ? categories.map((category) => `
         <div class="list-item">
-          <span>${category.name}</span>
+          <span>${escapeHTML(category.name)}</span>
           <div>
             <button type="button" class="button button-secondary small-button" data-edit-category="${category.id}">Editar</button>
             <button type="button" class="button button-primary small-button" data-delete-category="${category.id}">Excluir</button>
@@ -113,10 +119,10 @@ async function loadProducts() {
       ? products.map((product) => `
         <div class="list-item product-item">
           <div class="product-preview">
-            <img src="${product.image || '/assets/images/default-product.jpg'}" alt="${product.name}" />
+            ${product.image ? `<img src="${escapeHTML(product.image)}" alt="" loading="lazy" />` : '<span class="product-image-empty" aria-hidden="true"></span>'}
             <div>
-              <strong>${product.name}</strong>
-              <small>${product.categoryName || 'Sem categoria'}</small>
+              <strong>${escapeHTML(product.name)}</strong>
+              <small>${escapeHTML(product.categoryName || 'Sem categoria')}</small>
             </div>
           </div>
           <div>

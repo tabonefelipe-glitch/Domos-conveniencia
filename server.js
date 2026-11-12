@@ -8,6 +8,15 @@ const fs = require('fs');
 const path = require('path');
 const { randomUUID } = require('crypto');
 
+const envPath = path.join(__dirname, '.env');
+if (typeof process.loadEnvFile === 'function' && fs.existsSync(envPath)) {
+  process.loadEnvFile(envPath);
+}
+
+if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || !process.env.ADMIN_PASSWORD)) {
+  throw new Error('Configure SESSION_SECRET e ADMIN_PASSWORD no ambiente de produção.');
+}
+
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const rootDir = __dirname;
@@ -47,6 +56,7 @@ const upload = multer({
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsDir));
+app.use('/data', (_req, res) => res.sendStatus(404));
 app.use(express.static(rootDir));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'domus-dev-secret',
@@ -63,6 +73,57 @@ function parseBoolean(value) {
   return value === true || value === 1 || value === '1' || value === 'true' || value === 'yes';
 }
 
+function validateProductPayload(input) {
+  const name = String(input.name || '').trim();
+  const description = String(input.description || '').trim();
+  const price = Number(input.price);
+  const promotionalPrice = input.promotionalPrice === '' || input.promotionalPrice === null || input.promotionalPrice === undefined
+    ? null
+    : Number(input.promotionalPrice);
+  const stock = Number(input.stock ?? 0);
+  const categoryId = input.categoryId === '' || input.categoryId === null || input.categoryId === undefined
+    ? null
+    : Number(input.categoryId);
+  const image = String(input.image || '').trim();
+  const status = input.status || 'active';
+  const unit = String(input.unit || 'unidade').trim();
+
+  if (!name || name.length > 120) return { error: 'Informe um nome com até 120 caracteres.' };
+  if (description.length > 500) return { error: 'A descrição deve ter até 500 caracteres.' };
+  if (!Number.isFinite(price) || price <= 0 || price > 999999.99) return { error: 'O preço do produto é inválido.' };
+  if (promotionalPrice !== null && (!Number.isFinite(promotionalPrice) || promotionalPrice <= 0 || promotionalPrice >= price)) {
+    return { error: 'O preço promocional deve ser positivo e menor que o preço normal.' };
+  }
+  if (!Number.isInteger(stock) || stock < 0 || stock > 1000000) return { error: 'O estoque deve ser um número inteiro válido.' };
+  if (categoryId !== null && (!Number.isInteger(categoryId) || categoryId <= 0)) return { error: 'A categoria selecionada é inválida.' };
+  if (unit.length > 40) return { error: 'A unidade deve ter até 40 caracteres.' };
+  if (image.length > 2048 || (image && !/^https:\/\//i.test(image) && !/^\/(uploads|assets\/images)\//i.test(image))) {
+    return { error: 'Informe uma URL HTTPS ou uma imagem enviada para a loja.' };
+  }
+  if (!['active', 'inactive'].includes(status)) return { error: 'O status do produto é inválido.' };
+
+  return {
+    product: {
+      name,
+      description,
+      categoryId,
+      price,
+      promotionalPrice,
+      image,
+      stock,
+      unit: unit || 'unidade',
+      status,
+      available: parseBoolean(input.available) ? 1 : 0,
+      featured: parseBoolean(input.featured) ? 1 : 0,
+      promotion: parseBoolean(input.promotion) ? 1 : 0
+    }
+  };
+}
+
+function normalizeSearch(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+}
+
 function formatProduct(product) {
   return {
     id: product.id,
@@ -74,7 +135,7 @@ function formatProduct(product) {
     promotionalPrice: product.promotional_price !== null && product.promotional_price !== undefined
       ? Number(product.promotional_price)
       : null,
-    image: product.image || '/assets/images/default-product.jpg',
+    image: product.image || '',
     stock: Number(product.stock || 0),
     unit: product.unit || 'unidade',
     status: product.status || 'active',
@@ -331,98 +392,6 @@ async function initializeDatabase() {
     }
   }
 
-  const existingProducts = await dbGet('SELECT id FROM products LIMIT 1');
-  if (!existingProducts) {
-    const categories = await dbAll('SELECT id, name FROM categories');
-    const categoryIndex = Object.fromEntries(categories.map((category) => [category.name, category.id]));
-
-    const sampleProducts = [
-      {
-        name: 'Coca-Cola 2L',
-        description: 'Refrigerante de cola com sabor clássico para acompanhar qualquer refeição.',
-        categoryId: categoryIndex['Refrigerantes'],
-        price: 12.5,
-        promotionalPrice: 10.9,
-        image: 'https://images.unsplash.com/photo-1622483767028-3f66f2b0c1a9?auto=format&fit=crop&w=900&q=80',
-        stock: 30,
-        unit: 'unidade',
-        available: 1,
-        featured: 1,
-        promotion: 1,
-      },
-      {
-        name: 'Heineken 600ml',
-        description: 'Cerveja lager premium, refrescante e equilibrada.',
-        categoryId: categoryIndex['Cervejas'],
-        price: 9.8,
-        promotionalPrice: 8.5,
-        image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=900&q=80',
-        stock: 24,
-        unit: 'unidade',
-        available: 1,
-        featured: 1,
-        promotion: 1,
-      },
-      {
-        name: 'Carvão 3kg',
-        description: 'Carvão para churrasco com boa queima e rendimento.',
-        categoryId: categoryIndex['Produtos para churrasco'],
-        price: 25,
-        promotionalPrice: null,
-        image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80',
-        stock: 16,
-        unit: 'pacote',
-        available: 1,
-        featured: 0,
-        promotion: 0,
-      },
-      {
-        name: 'Pão de Queijo',
-        description: 'Salgado quentinho e crocante para lanchar a qualquer hora.',
-        categoryId: categoryIndex['Salgados e lanches'],
-        price: 6.5,
-        promotionalPrice: null,
-        image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=900&q=80',
-        stock: 18,
-        unit: 'unidade',
-        available: 1,
-        featured: 0,
-        promotion: 0,
-      },
-      {
-        name: 'Água Mineral 500ml',
-        description: 'Água mineral sem gás para hidratação no dia a dia.',
-        categoryId: categoryIndex['Bebidas'],
-        price: 4.5,
-        promotionalPrice: 3.9,
-        image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=80',
-        stock: 40,
-        unit: 'unidade',
-        available: 1,
-        featured: 0,
-        promotion: 1,
-      }
-    ];
-
-    for (const product of sampleProducts) {
-      await dbRun(`
-        INSERT INTO products (name, description, category_id, price, promotional_price, image, stock, unit, status, available, featured, promotion)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)
-      `, [
-        product.name,
-        product.description,
-        product.categoryId,
-        product.price,
-        product.promotionalPrice,
-        product.image,
-        product.stock,
-        product.unit,
-        product.available,
-        product.featured,
-        product.promotion
-      ]);
-    }
-  }
 }
 
 async function getSettings() {
@@ -469,7 +438,8 @@ app.get('/api/store/settings', async (_req, res) => {
       mapsUrl: 'https://www.google.com/maps/place/Domus+conveni%C3%AAncia/@-27.5978249,-48.6068827,17z/data=!3m1!4b1!4m6!3m5!1s0x952737da655f590d:0x59d4eefe6db66bfc!8m2!3d-27.5978249!4d-48.6068827!16s%2Fg%2F11zbk43z6d?entry=ttu'
     });
   } catch (error) {
-    res.status(500).json({ message: 'Não foi possível carregar as configurações da loja.', error: error.message });
+    console.error('Falha ao carregar configurações públicas da loja:', error);
+    res.status(500).json({ message: 'Não foi possível carregar as configurações da loja.' });
   }
 });
 
@@ -478,7 +448,8 @@ app.get('/api/categories', async (_req, res) => {
     const categories = await getActiveCategories();
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ message: 'Não foi possível carregar as categorias.', error: error.message });
+    console.error('Falha ao carregar categorias públicas:', error);
+    res.status(500).json({ message: 'Não foi possível carregar as categorias.' });
   }
 });
 
@@ -490,33 +461,99 @@ app.get('/api/products', async (req, res) => {
       SELECT p.*, c.name AS category_name
       FROM products p
       LEFT JOIN categories c ON c.id = p.category_id
-      WHERE p.status = 'active'
+      WHERE p.status = 'active' AND (c.id IS NULL OR c.status = 'active')
     `;
 
-    if (search && String(search).trim()) {
-      query += ' AND LOWER(p.name) LIKE LOWER(?)';
-      params.push(`%${String(search).trim()}%`);
+    if (category && category !== 'all') {
+      const categoryId = Number(category);
+      if (!Number.isInteger(categoryId) || categoryId <= 0) {
+        return res.status(400).json({ message: 'Categoria inválida.' });
+      }
+      query += ' AND p.category_id = ? AND c.status = ?';
+      params.push(categoryId, 'active');
     }
 
-    if (category && category !== 'all') {
-      query += ' AND p.category_id = ?';
-      params.push(Number(category));
-    }
+    const products = (await dbAll(query, params)).map(formatProduct);
+    const normalizedSearch = normalizeSearch(search);
+    const filtered = normalizedSearch
+      ? products.filter((product) => normalizeSearch(product.name).includes(normalizedSearch))
+      : products;
+    const priceForSort = (product) => product.promotion && Number(product.promotionalPrice) > 0
+      ? Number(product.promotionalPrice)
+      : Number(product.price);
 
     if (sort === 'price_asc') {
-      query += ' ORDER BY COALESCE(p.promotional_price, p.price) ASC';
+      filtered.sort((a, b) => priceForSort(a) - priceForSort(b));
     } else if (sort === 'price_desc') {
-      query += ' ORDER BY COALESCE(p.promotional_price, p.price) DESC';
+      filtered.sort((a, b) => priceForSort(b) - priceForSort(a));
     } else if (sort === 'name_asc') {
-      query += ' ORDER BY p.name ASC';
+      filtered.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
     } else {
-      query += ' ORDER BY p.featured DESC, p.promotion DESC, p.created_at DESC';
+      filtered.sort((a, b) => Number(b.featured) - Number(a.featured) || Number(b.promotion) - Number(a.promotion));
     }
 
-    const rows = await dbAll(query, params);
-    res.json(rows.map(formatProduct));
+    res.json(filtered);
   } catch (error) {
-    res.status(500).json({ message: 'Não foi possível carregar os produtos.', error: error.message });
+    console.error('Falha ao carregar produtos públicos:', error);
+    res.status(500).json({ message: 'Não foi possível carregar os produtos.' });
+  }
+});
+
+app.post('/api/orders/validate', async (req, res) => {
+  try {
+    const requestedItems = req.body?.items;
+    if (!Array.isArray(requestedItems) || requestedItems.length === 0 || requestedItems.length > 50) {
+      return res.status(400).json({ message: 'O carrinho está vazio ou contém itens demais.' });
+    }
+
+    const quantities = new Map();
+    for (const item of requestedItems) {
+      const productId = Number(item?.productId);
+      const quantity = Number(item?.quantity);
+      if (!Number.isInteger(productId) || productId <= 0 || !Number.isInteger(quantity) || quantity <= 0) {
+        return res.status(400).json({ message: 'Há um item inválido no carrinho.' });
+      }
+      quantities.set(productId, (quantities.get(productId) || 0) + quantity);
+    }
+
+    const ids = [...quantities.keys()];
+    const placeholders = ids.map(() => '?').join(', ');
+    const rows = await dbAll(`
+      SELECT p.*, c.name AS category_name
+      FROM products p
+      LEFT JOIN categories c ON c.id = p.category_id
+      WHERE p.id IN (${placeholders})
+    `, ids);
+    const products = new Map(rows.map((row) => [Number(row.id), formatProduct(row)]));
+    const orderItems = [];
+    let subtotalCents = 0;
+
+    for (const [productId, quantity] of quantities) {
+      const product = products.get(productId);
+      if (!product || product.status !== 'active' || !product.available || product.stock < quantity) {
+        return res.status(409).json({
+          message: `"${product?.name || 'Um produto'}" está indisponível ou não possui estoque suficiente. Atualize o carrinho.`,
+          productId
+        });
+      }
+
+      const unitPrice = product.promotion && Number(product.promotionalPrice) > 0
+        ? Number(product.promotionalPrice)
+        : Number(product.price);
+      const unitPriceCents = Math.round(unitPrice * 100);
+      const lineTotalCents = unitPriceCents * quantity;
+      subtotalCents += lineTotalCents;
+      orderItems.push({
+        product: { id: product.id, name: product.name, unit: product.unit },
+        quantity,
+        unitPrice: unitPriceCents / 100,
+        lineTotal: lineTotalCents / 100
+      });
+    }
+
+    res.json({ items: orderItems, subtotal: subtotalCents / 100, total: subtotalCents / 100, deliveryFee: null });
+  } catch (error) {
+    res.status(500).json({ message: 'Não foi possível validar os itens do pedido.' });
   }
 });
 
@@ -535,7 +572,8 @@ app.get('/api/products/:id', async (req, res) => {
 
     res.json(formatProduct(row));
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar produto.', error: error.message });
+    console.error('Falha ao buscar produto:', error);
+    res.status(500).json({ message: 'Erro ao buscar produto.' });
   }
 });
 
@@ -562,7 +600,8 @@ app.post('/api/admin/login', async (req, res) => {
     req.session.userEmail = user.email;
     res.json({ message: 'Login realizado com sucesso.', user: { id: user.id, name: user.name, email: user.email } });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao tentar autenticar.', error: error.message });
+    console.error('Falha ao autenticar administrador:', error);
+    res.status(500).json({ message: 'Erro ao tentar autenticar.' });
   }
 });
 
@@ -585,7 +624,8 @@ app.get('/api/admin/dashboard', requireAdmin, async (_req, res) => {
     const stats = await getDashboardStats();
     res.json(stats);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao carregar o dashboard.', error: error.message });
+    console.error('Falha ao carregar dashboard:', error);
+    res.status(500).json({ message: 'Erro ao carregar o dashboard.' });
   }
 });
 
@@ -594,7 +634,8 @@ app.get('/api/admin/categories', requireAdmin, async (_req, res) => {
     const categories = await dbAll('SELECT * FROM categories ORDER BY name ASC');
     res.json(categories);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao carregar categorias.', error: error.message });
+    console.error('Falha ao carregar categorias administrativas:', error);
+    res.status(500).json({ message: 'Erro ao carregar categorias.' });
   }
 });
 
@@ -611,7 +652,8 @@ app.post('/api/admin/categories', requireAdmin, async (req, res) => {
     const category = await dbGet('SELECT * FROM categories WHERE id = ?', [result.id]);
     res.status(201).json(category);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao criar categoria.', error: error.message });
+    console.error('Falha ao criar categoria:', error);
+    res.status(500).json({ message: 'Erro ao criar categoria.' });
   }
 });
 
@@ -628,7 +670,8 @@ app.put('/api/admin/categories/:id', requireAdmin, async (req, res) => {
     const category = await dbGet('SELECT * FROM categories WHERE id = ?', [categoryId]);
     res.json(category);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao atualizar categoria.', error: error.message });
+    console.error('Falha ao atualizar categoria:', error);
+    res.status(500).json({ message: 'Erro ao atualizar categoria.' });
   }
 });
 
@@ -644,7 +687,8 @@ app.delete('/api/admin/categories/:id', requireAdmin, async (req, res) => {
     await dbRun('DELETE FROM categories WHERE id = ?', [categoryId]);
     res.json({ message: 'Categoria removida com sucesso.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao remover categoria.', error: error.message });
+    console.error('Falha ao remover categoria:', error);
+    res.status(500).json({ message: 'Erro ao remover categoria.' });
   }
 });
 
@@ -659,7 +703,8 @@ app.get('/api/admin/products', requireAdmin, async (_req, res) => {
 
     res.json(products.map(formatProduct));
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao carregar produtos.', error: error.message });
+    console.error('Falha ao carregar produtos administrativos:', error);
+    res.status(500).json({ message: 'Erro ao carregar produtos.' });
   }
 });
 
@@ -674,83 +719,48 @@ app.post('/api/admin/upload', requireAdmin, upload.single('image'), (req, res) =
 
 app.post('/api/admin/products', requireAdmin, async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      categoryId,
-      price,
-      promotionalPrice,
-      image,
-      stock,
-      unit,
-      status,
-      available,
-      featured,
-      promotion
-    } = req.body;
-
-    if (!name || !String(name).trim()) {
-      return res.status(400).json({ message: 'O nome do produto é obrigatório.' });
+    const validation = validateProductPayload(req.body || {});
+    if (validation.error) return res.status(400).json({ message: validation.error });
+    const product = validation.product;
+    if (product.categoryId && !(await dbGet('SELECT id FROM categories WHERE id = ?', [product.categoryId]))) {
+      return res.status(400).json({ message: 'A categoria selecionada não existe.' });
     }
-
-    const finalPrice = Number(price || 0);
-    if (!Number.isFinite(finalPrice) || finalPrice <= 0) {
-      return res.status(400).json({ message: 'O preço do produto deve ser maior que zero.' });
-    }
-
-    const productImage = image || '/assets/images/default-product.jpg';
-    const finalStock = Number(stock || 0);
 
     const result = await dbRun(`
       INSERT INTO products (name, description, category_id, price, promotional_price, image, stock, unit, status, available, featured, promotion)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      String(name).trim(),
-      description || '',
-      categoryId ? Number(categoryId) : null,
-      finalPrice,
-      promotionalPrice && Number(promotionalPrice) > 0 ? Number(promotionalPrice) : null,
-      productImage,
-      finalStock,
-      unit || 'unidade',
-      status === 'inactive' ? 'inactive' : 'active',
-      parseBoolean(available) ? 1 : 0,
-      parseBoolean(featured) ? 1 : 0,
-      parseBoolean(promotion) ? 1 : 0,
+      product.name,
+      product.description,
+      product.categoryId,
+      product.price,
+      product.promotionalPrice,
+      product.image,
+      product.stock,
+      product.unit,
+      product.status,
+      product.available,
+      product.featured,
+      product.promotion
     ]);
 
     const created = await dbGet('SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.id = ?', [result.id]);
     res.status(201).json(formatProduct(created));
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao cadastrar produto.', error: error.message });
+    console.error('Falha ao cadastrar produto:', error);
+    res.status(500).json({ message: 'Erro ao cadastrar produto.' });
   }
 });
 
 app.put('/api/admin/products/:id', requireAdmin, async (req, res) => {
   try {
     const productId = Number(req.params.id);
-    const {
-      name,
-      description,
-      categoryId,
-      price,
-      promotionalPrice,
-      image,
-      stock,
-      unit,
-      status,
-      available,
-      featured,
-      promotion
-    } = req.body;
-
-    if (!name || !String(name).trim()) {
-      return res.status(400).json({ message: 'O nome do produto é obrigatório.' });
-    }
-
-    const finalPrice = Number(price || 0);
-    if (!Number.isFinite(finalPrice) || finalPrice <= 0) {
-      return res.status(400).json({ message: 'O preço do produto deve ser maior que zero.' });
+    if (!Number.isInteger(productId) || productId <= 0) return res.status(400).json({ message: 'Produto inválido.' });
+    const validation = validateProductPayload(req.body || {});
+    if (validation.error) return res.status(400).json({ message: validation.error });
+    const product = validation.product;
+    if (product.categoryId && !(await dbGet('SELECT id FROM categories WHERE id = ?', [product.categoryId]))) {
+      return res.status(400).json({ message: 'A categoria selecionada não existe.' });
     }
 
     await dbRun(`
@@ -770,25 +780,26 @@ app.put('/api/admin/products/:id', requireAdmin, async (req, res) => {
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `, [
-      String(name).trim(),
-      description || '',
-      categoryId ? Number(categoryId) : null,
-      finalPrice,
-      promotionalPrice && Number(promotionalPrice) > 0 ? Number(promotionalPrice) : null,
-      image || '/assets/images/default-product.jpg',
-      Number(stock || 0),
-      unit || 'unidade',
-      status === 'inactive' ? 'inactive' : 'active',
-      parseBoolean(available) ? 1 : 0,
-      parseBoolean(featured) ? 1 : 0,
-      parseBoolean(promotion) ? 1 : 0,
+      product.name,
+      product.description,
+      product.categoryId,
+      product.price,
+      product.promotionalPrice,
+      product.image,
+      product.stock,
+      product.unit,
+      product.status,
+      product.available,
+      product.featured,
+      product.promotion,
       productId
     ]);
 
     const updated = await dbGet('SELECT p.*, c.name AS category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.id = ?', [productId]);
     res.json(formatProduct(updated));
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao editar produto.', error: error.message });
+    console.error('Falha ao editar produto:', error);
+    res.status(500).json({ message: 'Erro ao editar produto.' });
   }
 });
 
@@ -798,7 +809,8 @@ app.delete('/api/admin/products/:id', requireAdmin, async (req, res) => {
     await dbRun('DELETE FROM products WHERE id = ?', [productId]);
     res.json({ message: 'Produto removido com sucesso.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao remover produto.', error: error.message });
+    console.error('Falha ao remover produto:', error);
+    res.status(500).json({ message: 'Erro ao remover produto.' });
   }
 });
 
@@ -807,7 +819,8 @@ app.get('/api/admin/settings', requireAdmin, async (_req, res) => {
     const settings = await getSettings();
     res.json(settings);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao carregar configurações.', error: error.message });
+    console.error('Falha ao carregar configurações administrativas:', error);
+    res.status(500).json({ message: 'Erro ao carregar configurações.' });
   }
 });
 
@@ -832,7 +845,8 @@ app.put('/api/admin/settings', requireAdmin, async (req, res) => {
 
     res.json({ message: 'Configurações salvas com sucesso.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao salvar configurações.', error: error.message });
+    console.error('Falha ao salvar configurações administrativas:', error);
+    res.status(500).json({ message: 'Erro ao salvar configurações.' });
   }
 });
 

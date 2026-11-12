@@ -1,5 +1,54 @@
 # DOMUS CONVENIÊNCIA
 
+Loja virtual e site institucional da Domus Conveniência. O catálogo e as categorias são gerenciados pelo painel administrativo; os pedidos são revisados no site e enviados pelo cliente ao WhatsApp da loja. O site não processa pagamentos.
+
+## Tecnologias
+
+- HTML5, CSS3 e JavaScript sem etapa de build
+- Node.js e Express
+- SQLite local (`data/domus.db`) ou PostgreSQL quando `DATABASE_URL` estiver configurada
+- Sessões administrativas com `express-session` e senhas armazenadas com bcrypt
+- Upload de imagens do catálogo para `uploads/`
+
+## Executar localmente
+
+Requer Node.js compatível com `process.loadEnvFile` (Node.js 20.12 ou mais recente).
+
+```sh
+npm install
+npm start
+```
+
+O servidor usa a porta `3000` por padrão. Para desenvolvimento com reinício automático, use `npm run dev`.
+
+## Configuração
+
+Defina as variáveis de ambiente no provedor de hospedagem ou em um arquivo `.env` local, que não deve ser publicado:
+
+- `PORT`: porta HTTP (padrão `3000`)
+- `SESSION_SECRET`: segredo longo e aleatório para assinar sessões
+- `ADMIN_EMAIL` e `ADMIN_PASSWORD`: credenciais iniciais do painel
+- `DATABASE_URL`: URL PostgreSQL; quando ausente, o servidor usa SQLite
+- `WHATSAPP_NUMBER`: telefone da loja no formato internacional, apenas dígitos
+- `STORE_NAME`: nome público da loja
+
+Em produção, `SESSION_SECRET` e `ADMIN_PASSWORD` são obrigatórios. As credenciais administrativas não são entregues ao navegador. A conta administrativa inicial só é criada quando não existe uma conta com o e-mail configurado.
+
+## Rotas principais
+
+- `/`: site institucional
+- `/shop.html` ou `/loja`: catálogo, carrinho e checkout
+- `/admin`: painel protegido para produtos, categorias e configurações
+- `/api/products` e `/api/categories`: catálogo público
+- `/api/orders/validate`: valida disponibilidade, estoque e preços atuais antes do pedido
+- `/api/health`: verificação de saúde do serviço
+
+O carrinho é armazenado no navegador. A validação do pedido usa os dados atuais do banco; a loja confirma pelo WhatsApp a disponibilidade final e eventual taxa de entrega. Nenhum pagamento é simulado ou aprovado pelo site.
+
+## Publicação
+
+Publique como serviço Node.js usando `npm install` na instalação e `npm start` no comando de início. Configure os segredos e `DATABASE_URL` no ambiente do provedor. Preserve o armazenamento persistente do banco SQLite e da pasta `uploads/` se optar por SQLite; em ambientes efêmeros, prefira PostgreSQL e armazenamento persistente de imagens.# DOMUS CONVENIÊNCIA
+
 Landing page institucional estática da DOMUS CONVENIÊNCIA em Campinas, São José - SC, com fotografias locais, localização e canais oficiais.
 
 ## Tecnologias

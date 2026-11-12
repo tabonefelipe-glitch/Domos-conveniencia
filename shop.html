@@ -68,18 +68,13 @@
       </section>
 
       <section class="container shop-section" id="produtos">
+        <div class="category-chips" id="categoryChips" role="group" aria-label="Filtrar por categoria"></div>
         <div class="shop-toolbar">
           <div class="search-box">
             <svg class="icon-inline" aria-hidden="true"><use href="#icon-search"></use></svg>
             <input id="productSearch" type="search" placeholder="Buscar produto" aria-label="Buscar produto" />
           </div>
           <div class="toolbar-controls">
-            <label>
-              <span>Categoria</span>
-              <select id="categoryFilter">
-                <option value="all">Todas</option>
-              </select>
-            </label>
             <label>
               <span>Ordenar</span>
               <select id="sortSelect">
@@ -106,7 +101,7 @@
       <div id="cartList" class="cart-list"></div>
       <div class="cart-summary">
         <div class="summary-row"><span>Subtotal</span><strong id="cartSubtotal">R$ 0,00</strong></div>
-        <div class="summary-row"><span>Total</span><strong id="cartTotal">R$ 0,00</strong></div>
+        <div class="summary-row total-row"><span>Total dos itens</span><strong id="cartTotal">R$ 0,00</strong></div>
         <button type="button" class="button button-primary cart-submit" id="checkoutBtn">Finalizar pedido</button>
         <button type="button" class="button button-secondary cart-clear" id="clearCartBtn">Limpar carrinho</button>
       </div>
@@ -140,8 +135,16 @@
             </select>
           </label>
           <label id="addressField" class="hidden">
-            <span>Endereço de entrega</span>
-            <textarea name="address" rows="3" placeholder="Rua, número, bairro e referência"></textarea>
+            <span>Endereço</span>
+            <input type="text" name="address" autocomplete="street-address" maxlength="180" placeholder="Rua e número" />
+          </label>
+          <label id="neighborhoodField" class="hidden">
+            <span>Bairro</span>
+            <input type="text" name="neighborhood" autocomplete="address-level3" maxlength="100" />
+          </label>
+          <label id="complementField" class="hidden">
+            <span>Complemento (opcional)</span>
+            <input type="text" name="complement" autocomplete="address-line2" maxlength="120" />
           </label>
           <label>
             <span>Forma de pagamento</span>
@@ -153,8 +156,10 @@
           </label>
           <label>
             <span>Observações</span>
-            <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
+            <textarea name="notes" rows="3" maxlength="500" placeholder="Opcional"></textarea>
           </label>
+          <p class="privacy-note">Ao continuar, seus dados serão incluídos na mensagem do WhatsApp. <a href="/privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>.</p>
+          <p class="order-error" id="checkoutError" role="alert" hidden></p>
           <button type="submit" class="button button-primary">Revisar pedido</button>
         </form>
       </div>
@@ -167,12 +172,15 @@
         </button>
         <h2 id="reviewTitle">Revisar pedido</h2>
         <div id="reviewContent" class="review-content"></div>
+        <p class="order-error" id="reviewError" role="alert" hidden></p>
         <button type="button" class="button button-primary" id="sendToWhatsApp">Enviar pedido pelo WhatsApp</button>
       </div>
     </div>
 
-    <button class="whatsapp-float" type="button" id="floatingCartButton" data-tooltip="Carrinho" aria-label="Abrir carrinho">
+    <button class="whatsapp-float" type="button" id="floatingCartButton" data-tooltip="Abrir carrinho" aria-label="Abrir carrinho" hidden>
       <svg class="icon-cart" aria-hidden="true"><use href="#icon-cart"></use></svg>
+      <span id="mobileCartCount">0 itens</span><strong id="mobileCartTotal">R$ 0,00</strong>
     </button>
+    <footer class="store-footer"><div class="container"><span>© Domus Conveniência</span><a href="/privacidade.html">Política de privacidade</a></div></footer>
   </body>
 </html>

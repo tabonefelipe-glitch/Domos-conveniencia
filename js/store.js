@@ -11,19 +11,33 @@ const state = {
   categories: [],
   cart: loadCart(),
   orderDraft: null,
+  sendingOrder: false,
 };
 
 function loadCart() {
   try {
     const raw = localStorage.getItem(DOMUS_CART_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (error) {
+    const items = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(items)) return [];
+    return items.map((item) => {
+      const product = item.product || {};
+      const productId = Number(item.productId ?? product.id);
+      const quantity = Number(item.quantity);
+      return Number.isInteger(productId) && productId > 0 && Number.isInteger(quantity) && quantity > 0
+        ? { productId, product, quantity, unavailable: false }
+        : null;
+    }).filter(Boolean);
+  } catch {
     return [];
   }
 }
 
 function saveCart() {
-  localStorage.setItem(DOMUS_CART_KEY, JSON.stringify(state.cart));
+  try {
+    localStorage.setItem(DOMUS_CART_KEY, JSON.stringify(state.cart));
+  } catch (error) {
+    console.error('Não foi possível salvar o carrinho neste navegador.', error);
+  }
 }
 
 function getCartCount() {
@@ -41,6 +55,36 @@ function getProductPrice(product) {
   return Number(product.price || 0);
 }
 
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+
+function normalizeText(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
+}
+
+function getCartItem(productId) {
+  return state.cart.find((item) => item.productId === Number(productId));
+}
+
+function getCartSubtotal() {
+  return state.cart.reduce((total, item) => total + getProductPrice(item.product) * item.quantity, 0);
+}
+
+function attachImageFallbacks(container) {
+  container.querySelectorAll('img').forEach((image) => {
+    image.addEventListener('error', () => {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'product-image-empty';
+      placeholder.setAttribute('role', 'img');
+      placeholder.setAttribute('aria-label', `Imagem de ${image.alt || 'produto'} indisponível`);
+      image.replaceWith(placeholder);
+    }, { once: true });
+  });
+}
+
 function updateCartBadge() {
   const countEls = document.querySelectorAll('[data-cart-count]');
   countEls.forEach((element) => {
@@ -50,7 +94,7 @@ function updateCartBadge() {
 
 function getPriceLabel(product) {
   const activePrice = getProductPrice(product);
-  if (product.promotionalPrice && Number(product.promotionalPrice) > 0 && Number(product.promotionalPrice) < Number(product.price || 0)) {
+  if (product.promotion && Number(product.promotionalPrice) > 0 && Number(product.promotionalPrice) < Number(product.price || 0)) {
     return `${formatMoney(activePrice)}`;
   }
   return formatMoney(activePrice);
@@ -76,8 +120,15 @@ function updateCartSummary() {
   const totalEl = document.getElementById('cartTotal');
   const checkoutBtn = document.getElementById('checkoutBtn');
   const clearCartBtn = document.getElementById('clearCartBtn');
+  const mobileCart = document.getElementById('floatingCartButton');
+  const mobileTotal = document.getElementById('mobileCartTotal');
+  const mobileCount = document.getElementById('mobileCartCount');
 
   if (!cartList) return;
+
+  if (mobileTotal) mobileTotal.textContent = formatMoney(getCartSubtotal());
+  if (mobileCount) mobileCount.textContent = `${getCartCount()} ${getCartCount() === 1 ? 'item' : 'itens'}`;
+  if (mobileCart) mobileCart.hidden = getCartCount() === 0;
 
   if (state.cart.length === 0) {
     cartList.innerHTML = '<p class="empty-cart">Seu carrinho está vazio.</p>';
@@ -95,29 +146,31 @@ function updateCartSummary() {
     const lineTotal = getProductPrice(product) * item.quantity;
     subtotal += lineTotal;
     return `
-      <article class="cart-item">
-        <img src="${product.image || '/assets/images/default-product.jpg'}" alt="${product.name}" />
+      <article class="cart-item ${item.unavailable ? 'is-unavailable' : ''}">
+        ${product.image ? `<img src="${escapeHTML(product.image)}" alt="${escapeHTML(product.name)}" loading="lazy" />` : '<span class="product-image-empty" aria-hidden="true"></span>'}
         <div class="cart-item-copy">
           <div class="cart-item-topline">
-            <h3>${product.name}</h3>
-            <button type="button" class="trash-button" data-remove-item="${product.id}" aria-label="Remover ${product.name}">
+            <h3>${escapeHTML(product.name)}</h3>
+            <button type="button" class="trash-button" data-remove-item="${item.productId}" aria-label="Remover ${escapeHTML(product.name)}">
               <svg class="icon-inline" aria-hidden="true"><use href="#icon-trash"></use></svg>
             </button>
           </div>
           <div class="qty-row">
-            <button type="button" data-qty-change="-${product.id}" aria-label="Diminuir quantidade">-</button>
+            <button type="button" data-qty-change="-${item.productId}" aria-label="Diminuir quantidade de ${escapeHTML(product.name)}">-</button>
             <span>${item.quantity}</span>
-            <button type="button" data-qty-change="+${product.id}" aria-label="Aumentar quantidade">+</button>
+            <button type="button" data-qty-change="+${item.productId}" aria-label="Aumentar quantidade de ${escapeHTML(product.name)}" ${item.unavailable || item.quantity >= Number(product.stock || 0) ? 'disabled' : ''}>+</button>
           </div>
-          <strong>${formatMoney(lineTotal)}</strong>
+          ${item.unavailable ? '<small>Indisponível. Remova para continuar.</small>' : ''}
+          <strong>Subtotal: ${formatMoney(lineTotal)}</strong>
         </div>
       </article>
     `;
   }).join('');
+  attachImageFallbacks(cartList);
 
   if (subtotalEl) subtotalEl.textContent = formatMoney(subtotal);
   if (totalEl) totalEl.textContent = formatMoney(subtotal);
-  if (checkoutBtn) checkoutBtn.disabled = false;
+  if (checkoutBtn) checkoutBtn.disabled = state.cart.some((item) => item.unavailable) || state.cart.length === 0;
   if (clearCartBtn) clearCartBtn.disabled = false;
   updateCartBadge();
 
@@ -135,33 +188,37 @@ function updateCartSummary() {
 }
 
 function addToCart(product, quantity = 1) {
-  const safeProduct = { ...product, available: product.available !== false };
-  if (!safeProduct.available) {
+  const safeProduct = { ...product };
+  const productId = Number(safeProduct.id);
+  const stock = Number(safeProduct.stock || 0);
+  if (safeProduct.available !== true || stock <= 0 || !Number.isInteger(productId)) {
     return;
   }
 
-  const existing = state.cart.find((item) => item.product.id === safeProduct.id);
+  const existing = getCartItem(productId);
   if (existing) {
     const nextQty = existing.quantity + quantity;
-    const maxStock = Number(safeProduct.stock || 999);
-    existing.quantity = Math.min(nextQty, maxStock || nextQty);
+    existing.quantity = Math.min(nextQty, stock);
+    existing.product = safeProduct;
+    existing.unavailable = false;
   } else {
-    state.cart.push({ product: safeProduct, quantity });
+    state.cart.push({ productId, product: safeProduct, quantity: Math.min(quantity, stock), unavailable: false });
   }
 
   saveCart();
   updateCartSummary();
-  openCart(true);
+  if (document.getElementById('productGrid')) renderProducts(getVisibleProducts());
 }
 
 function removeFromCart(productId) {
   state.cart = state.cart.filter((item) => item.product.id !== productId);
   saveCart();
   updateCartSummary();
+  if (document.getElementById('productGrid')) renderProducts(getVisibleProducts());
 }
 
 function changeQuantity(productId, delta) {
-  const item = state.cart.find((entry) => entry.product.id === productId);
+  const item = getCartItem(productId);
   if (!item) return;
   const nextQty = item.quantity + delta;
   if (nextQty <= 0) {
@@ -170,15 +227,18 @@ function changeQuantity(productId, delta) {
   }
 
   const maxStock = Number(item.product.stock || 0);
-  item.quantity = maxStock > 0 ? Math.min(nextQty, maxStock) : nextQty;
+  if (delta > 0 && (item.unavailable || maxStock <= 0)) return;
+  item.quantity = Math.min(nextQty, maxStock);
   saveCart();
   updateCartSummary();
+  if (document.getElementById('productGrid')) renderProducts(getVisibleProducts());
 }
 
 function clearCart() {
   state.cart = [];
   saveCart();
   updateCartSummary();
+  if (document.getElementById('productGrid')) renderProducts(getVisibleProducts());
 }
 
 function renderProducts(products) {
@@ -186,48 +246,59 @@ function renderProducts(products) {
   if (!productGrid) return;
 
   if (!products.length) {
-    productGrid.innerHTML = '<div class="empty-state">Nenhum produto encontrado para essa busca.</div>';
+    productGrid.innerHTML = '<div class="empty-state"><strong>Nenhum produto encontrado</strong><span>Experimente outra busca ou categoria.</span></div>';
     return;
   }
 
   productGrid.innerHTML = products.map((product) => {
-    const hasDiscount = Number(product.promotionalPrice) > 0 && Number(product.promotionalPrice) < Number(product.price || 0);
+    const hasDiscount = product.promotion && Number(product.promotionalPrice) > 0 && Number(product.promotionalPrice) < Number(product.price || 0);
     const isAvailable = product.available !== false && Number(product.stock || 0) > 0;
     const productPrice = getProductPrice(product);
+    const cartItem = getCartItem(product.id);
+    const quantity = cartItem?.quantity || 0;
     return `
       <article class="product-card ${!isAvailable ? 'is-disabled' : ''}">
-        <button type="button" class="product-image-button" data-open-product="${product.id}" aria-label="Abrir ${product.name}">
-          <img src="${product.image || '/assets/images/default-product.jpg'}" alt="${product.name}" />
+        <button type="button" class="product-image-button" data-open-product="${product.id}" aria-label="Abrir ${escapeHTML(product.name)}">
+          ${product.image ? `<img src="${escapeHTML(product.image)}" alt="${escapeHTML(product.name)}" loading="lazy" decoding="async" />` : '<span class="product-image-empty" aria-hidden="true"></span>'}
           ${hasDiscount ? '<span class="promo-badge">Promoção</span>' : ''}
           ${product.featured ? '<span class="featured-badge">Destaque</span>' : ''}
           ${!isAvailable ? '<span class="unavailable-badge">Indisponível</span>' : ''}
         </button>
         <div class="product-body">
           <div class="product-meta">
-            <span>${product.categoryName || 'Produtos'}</span>
+            <span>${escapeHTML(product.categoryName || 'Produtos')}</span>
             ${hasDiscount ? '<small>Promo</small>' : ''}
           </div>
-          <h3>${product.name}</h3>
-          <p>${product.description || 'Produto da Domus Conveniência.'}</p>
+          <h3>${escapeHTML(product.name)}</h3>
+          <p>${escapeHTML(product.description || 'Produto da Domus Conveniência.')}</p>
           <div class="product-price-row">
             <div>
               ${hasDiscount ? `<strong>${formatMoney(productPrice)}</strong><span class="old-price">${formatMoney(product.price)}</span>` : `<strong>${formatMoney(productPrice)}</strong>`}
             </div>
-            <span class="unit-label">${product.unit || 'unidade'}</span>
+            <span class="unit-label">${escapeHTML(product.unit || 'unidade')}</span>
           </div>
           <div class="product-actions">
-            <button type="button" class="button button-primary" data-add-cart="${product.id}" ${!isAvailable ? 'disabled' : ''}>${isAvailable ? 'Adicionar' : 'Indisponível'}</button>
-            <button type="button" class="button button-secondary" data-open-product="${product.id}">Detalhes</button>
+            ${quantity ? `<div class="qty-row product-quantity"><button type="button" data-product-qty="-${product.id}" aria-label="Diminuir ${escapeHTML(product.name)}">-</button><span>${quantity}</span><button type="button" data-product-qty="+${product.id}" aria-label="Aumentar ${escapeHTML(product.name)}" ${!isAvailable || quantity >= Number(product.stock || 0) ? 'disabled' : ''}>+</button></div>` : ''}
+            <button type="button" class="button button-primary" data-add-cart="${product.id}" ${!isAvailable || quantity >= Number(product.stock || 0) ? 'disabled' : ''}>${isAvailable ? (quantity ? 'Adicionar mais' : 'Adicionar') : 'Indisponível'}</button>
           </div>
         </div>
       </article>
     `;
   }).join('');
+  attachImageFallbacks(productGrid);
 
   document.querySelectorAll('[data-add-cart]').forEach((button) => {
     button.addEventListener('click', () => {
       const product = products.find((entry) => entry.id === Number(button.dataset.addCart));
       if (product) addToCart(product, 1);
+    });
+  });
+
+  productGrid.querySelectorAll('[data-product-qty]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const value = button.dataset.productQty;
+      changeQuantity(Number(value.replace(/[+-]/g, '')), value.startsWith('+') ? 1 : -1);
+      renderProducts(getVisibleProducts());
     });
   });
 
@@ -250,17 +321,17 @@ function openProductModal(product) {
 
   content.innerHTML = `
     <div class="product-modal-visual">
-      <img src="${product.image || '/assets/images/default-product.jpg'}" alt="${product.name}" />
+      ${product.image ? `<img src="${escapeHTML(product.image)}" alt="${escapeHTML(product.name)}" />` : '<span class="product-image-empty" aria-hidden="true"></span>'}
     </div>
     <div class="product-modal-copy">
-      <p class="eyebrow"><span class="eyebrow-line"></span> ${product.categoryName || 'Produto'}</p>
-      <h3 id="productModalTitle">${product.name}</h3>
-      <p>${product.description || 'Produto disponível na Domus Conveniência.'}</p>
+      <p class="eyebrow"><span class="eyebrow-line"></span> ${escapeHTML(product.categoryName || 'Produto')}</p>
+      <h3 id="productModalTitle">${escapeHTML(product.name)}</h3>
+      <p>${escapeHTML(product.description || 'Produto disponível na Domus Conveniência.')}</p>
       <div class="product-price-row">
         <div>
-          ${Number(product.promotionalPrice) > 0 && Number(product.promotionalPrice) < Number(product.price || 0) ? `<strong>${formatMoney(price)}</strong><span class="old-price">${formatMoney(oldPrice)}</span>` : `<strong>${formatMoney(price)}</strong>`}
+          ${product.promotion && Number(product.promotionalPrice) > 0 && Number(product.promotionalPrice) < Number(product.price || 0) ? `<strong>${formatMoney(price)}</strong><span class="old-price">${formatMoney(oldPrice)}</span>` : `<strong>${formatMoney(price)}</strong>`}
         </div>
-        <span class="unit-label">${product.unit || 'unidade'}</span>
+        <span class="unit-label">${escapeHTML(product.unit || 'unidade')}</span>
       </div>
       <div class="quantity-selector">
         <button type="button" id="decreaseQty" aria-label="Diminuir quantidade">-</button>
@@ -270,6 +341,7 @@ function openProductModal(product) {
       <button type="button" class="button button-primary" id="modalAddToCart" ${available ? '' : 'disabled'}>${available ? 'Adicionar ao carrinho' : 'Indisponível'}</button>
     </div>
   `;
+  attachImageFallbacks(content);
 
   let quantity = 1;
   const qtyEl = document.getElementById('currentQty');
@@ -291,26 +363,27 @@ function openProductModal(product) {
 
 function createMessageFromOrder(order) {
   const productLines = order.items.map((entry) => {
-    const value = getProductPrice(entry.product);
-    return `${entry.quantity}x ${entry.product.name} — ${formatMoney(value * entry.quantity)}`;
+    return `- ${entry.quantity}x ${entry.product.name} — ${formatMoney(entry.unitPrice)} cada (${entry.product.unit || 'unidade'}) — ${formatMoney(entry.lineTotal)}`;
   }).join('\n');
 
   return [
     'Olá! Gostaria de realizar um pedido na Domus Conveniência.',
     '',
-    '*DADOS DO CLIENTE*',
-    `Nome: ${order.customerName}`,
-    `Atendimento: ${order.orderType === 'delivery' ? 'Delivery' : 'Retirada na loja'}`,
-    order.orderType === 'delivery' ? `Endereço: ${order.address}` : 'Endereço: Retirada na loja',
-    `Pagamento: ${order.paymentMethod}`,
+    `CLIENTE: ${order.customerName}`,
     '',
-    '*MEU PEDIDO*',
+    `TIPO DE ATENDIMENTO: ${order.orderType === 'delivery' ? 'Delivery' : 'Retirada'}`,
+    ...(order.orderType === 'delivery' ? [
+      `ENDEREÇO: ${order.address}, ${order.neighborhood}`,
+      order.complement ? `COMPLEMENTO: ${order.complement}` : ''
+    ] : []),
+    `FORMA DE PAGAMENTO: ${order.paymentMethod}`,
+    '',
+    'ITENS DO PEDIDO:',
     productLines,
-    '',
-    `*TOTAL: ${formatMoney(order.total)}*`,
-    order.notes ? `Observações: ${order.notes}` : '',
-    '',
-    'Aguardo a confirmação da disponibilidade e do pedido. Obrigado!'
+    `SUBTOTAL: ${formatMoney(order.subtotal)}`,
+    ...(order.orderType === 'delivery' ? ['TAXA DE ENTREGA: A confirmar pela loja.'] : []),
+    `TOTAL: ${order.orderType === 'delivery' ? `${formatMoney(order.subtotal)} + taxa de entrega a confirmar pela loja` : formatMoney(order.total)}`,
+    order.notes ? `OBSERVAÇÕES: ${order.notes}` : ''
   ].filter(Boolean).join('\n');
 }
 
@@ -336,44 +409,67 @@ function renderReview(order) {
   if (!reviewContent) return;
 
   const itemsHtml = order.items.map((entry) => {
-    const subtotal = getProductPrice(entry.product) * entry.quantity;
     return `
       <li>
-        <span>${entry.quantity}x ${entry.product.name}</span>
-        <strong>${formatMoney(subtotal)}</strong>
+        <span>${entry.quantity}x ${escapeHTML(entry.product.name)}<small>${formatMoney(entry.unitPrice)} cada</small></span>
+        <strong>${formatMoney(entry.lineTotal)}</strong>
       </li>
     `;
   }).join('');
 
   reviewContent.innerHTML = `
     <div class="review-summary-box">
-      <p><strong>Cliente:</strong> ${order.customerName}</p>
+      <p><strong>Cliente:</strong> ${escapeHTML(order.customerName)}</p>
       <p><strong>Atendimento:</strong> ${order.orderType === 'delivery' ? 'Delivery' : 'Retirada na loja'}</p>
-      ${order.orderType === 'delivery' ? `<p><strong>Endereço:</strong> ${order.address}</p>` : ''}
-      <p><strong>Pagamento:</strong> ${order.paymentMethod}</p>
-      ${order.notes ? `<p><strong>Observações:</strong> ${order.notes}</p>` : ''}
+      ${order.orderType === 'delivery' ? `<p><strong>Endereço:</strong> ${escapeHTML(order.address)}, ${escapeHTML(order.neighborhood)}</p>${order.complement ? `<p><strong>Complemento:</strong> ${escapeHTML(order.complement)}</p>` : ''}` : ''}
+      <p><strong>Pagamento:</strong> ${escapeHTML(order.paymentMethod)}</p>
+      ${order.notes ? `<p><strong>Observações:</strong> ${escapeHTML(order.notes)}</p>` : ''}
     </div>
     <ul class="review-items">${itemsHtml}</ul>
-    <div class="summary-row total-row"><span>Total</span><strong>${formatMoney(order.total)}</strong></div>
+    <div class="summary-row"><span>Subtotal dos itens</span><strong>${formatMoney(order.subtotal)}</strong></div>
+    ${order.orderType === 'delivery' ? '<p class="delivery-notice">Taxa de entrega a confirmar pela loja.</p>' : ''}
+    <div class="summary-row total-row"><span>${order.orderType === 'delivery' ? 'Total + entrega' : 'Total'}</span><strong>${order.orderType === 'delivery' ? `${formatMoney(order.subtotal)} + taxa a confirmar` : formatMoney(order.total)}</strong></div>
   `;
 }
 
-async function loadProducts() {
-  const search = document.getElementById('productSearch')?.value || '';
-  const category = document.getElementById('categoryFilter')?.value || 'all';
+function getVisibleProducts() {
+  const search = normalizeText(document.getElementById('productSearch')?.value || '');
+  const category = document.querySelector('[data-category-filter].is-active')?.dataset.categoryFilter || 'all';
   const sort = document.getElementById('sortSelect')?.value || 'featured';
+  const products = state.products.filter((product) => {
+    const matchesSearch = !search || normalizeText(product.name).includes(search);
+    const matchesCategory = category === 'all' || String(product.categoryId) === category;
+    return matchesSearch && matchesCategory;
+  });
+  const activePrice = (product) => getProductPrice(product);
+  if (sort === 'price_asc') products.sort((a, b) => activePrice(a) - activePrice(b));
+  else if (sort === 'price_desc') products.sort((a, b) => activePrice(b) - activePrice(a));
+  else if (sort === 'name_asc') products.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+  else products.sort((a, b) => Number(b.featured) - Number(a.featured) || Number(b.promotion) - Number(a.promotion));
+  return products;
+}
 
+async function loadProducts() {
   try {
-    const response = await fetch(`/api/products?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}&sort=${encodeURIComponent(sort)}`);
+    const response = await fetch('/api/products');
     if (!response.ok) throw new Error('Erro ao carregar produtos');
     const products = await response.json();
     state.products = products;
-    renderProducts(products);
+    const latestById = new Map(products.map((product) => [Number(product.id), product]));
+    state.cart = state.cart.map((item) => {
+      const current = latestById.get(item.productId);
+      return current
+        ? { ...item, product: current, unavailable: current.available !== true || Number(current.stock) < item.quantity }
+        : { ...item, unavailable: true };
+    });
+    saveCart();
+    renderProducts(getVisibleProducts());
+    updateCartSummary();
   } catch (error) {
     console.error(error);
     const grid = document.getElementById('productGrid');
     if (grid) {
-      grid.innerHTML = '<div class="empty-state">Não foi possível carregar os produtos no momento.</div>';
+      grid.innerHTML = '<div class="empty-state"><strong>Não foi possível carregar os produtos.</strong><span>Verifique sua conexão e tente novamente.</span></div>';
     }
   }
 }
@@ -383,9 +479,21 @@ async function loadCategories() {
     const response = await fetch('/api/categories');
     const categories = await response.json();
     state.categories = categories;
-    const categoryFilter = document.getElementById('categoryFilter');
-    if (categoryFilter) {
-      categoryFilter.innerHTML = '<option value="all">Todas</option>' + categories.map((category) => `<option value="${category.id}">${category.name}</option>`).join('');
+    const categoryChips = document.getElementById('categoryChips');
+    if (categoryChips) {
+      categoryChips.innerHTML = [
+        '<button type="button" class="category-chip is-active" data-category-filter="all" aria-pressed="true">Todas</button>',
+        ...categories.map((category) => `<button type="button" class="category-chip" data-category-filter="${Number(category.id)}" aria-pressed="false">${escapeHTML(category.name)}</button>`)
+      ].join('');
+      categoryChips.querySelectorAll('[data-category-filter]').forEach((button) => {
+        button.addEventListener('click', () => {
+          categoryChips.querySelector('.is-active')?.classList.remove('is-active');
+          categoryChips.querySelector('[aria-pressed="true"]')?.setAttribute('aria-pressed', 'false');
+          button.classList.add('is-active');
+          button.setAttribute('aria-pressed', 'true');
+          renderProducts(getVisibleProducts());
+        });
+      });
     }
   } catch (error) {
     console.error(error);
@@ -450,8 +558,16 @@ function ensureCartShell() {
           </select>
         </label>
         <label id="addressField" class="hidden">
-          <span>Endereço de entrega</span>
-          <textarea name="address" rows="3" placeholder="Rua, número, bairro e referência"></textarea>
+          <span>Endereço</span>
+          <input type="text" name="address" autocomplete="street-address" maxlength="180" placeholder="Rua e número" />
+        </label>
+        <label id="neighborhoodField" class="hidden">
+          <span>Bairro</span>
+          <input type="text" name="neighborhood" autocomplete="address-level3" maxlength="100" />
+        </label>
+        <label id="complementField" class="hidden">
+          <span>Complemento (opcional)</span>
+          <input type="text" name="complement" autocomplete="address-line2" maxlength="120" />
         </label>
         <label>
           <span>Forma de pagamento</span>
@@ -463,8 +579,10 @@ function ensureCartShell() {
         </label>
         <label>
           <span>Observações</span>
-          <textarea name="notes" rows="3" placeholder="Opcional"></textarea>
+          <textarea name="notes" rows="3" maxlength="500" placeholder="Opcional"></textarea>
         </label>
+        <p class="privacy-note">Ao continuar, seus dados serão incluídos na mensagem do WhatsApp. <a href="/privacidade.html" target="_blank" rel="noopener">Política de privacidade</a>.</p>
+        <p class="order-error" id="checkoutError" role="alert" hidden></p>
         <button type="submit" class="button button-primary">Revisar pedido</button>
       </form>
     </div>
@@ -481,6 +599,7 @@ function ensureCartShell() {
       </button>
       <h2 id="reviewTitle">Revisar pedido</h2>
       <div id="reviewContent" class="review-content"></div>
+      <p class="order-error" id="reviewError" role="alert" hidden></p>
       <button type="button" class="button button-primary" id="sendToWhatsApp">Enviar pedido pelo WhatsApp</button>
     </div>
   `;
@@ -490,9 +609,10 @@ function ensureCartShell() {
   floatingButton.className = 'whatsapp-float';
   floatingButton.type = 'button';
   floatingButton.id = 'floatingCartButton';
-  floatingButton.dataset.tooltip = 'Carrinho';
+  floatingButton.dataset.tooltip = 'Abrir carrinho';
   floatingButton.setAttribute('aria-label', 'Abrir carrinho');
-  floatingButton.innerHTML = '<svg class="icon-cart" aria-hidden="true"><use href="#icon-cart"></use></svg>';
+  floatingButton.innerHTML = '<svg class="icon-cart" aria-hidden="true"><use href="#icon-cart"></use></svg><span id="mobileCartCount">0 itens</span><strong id="mobileCartTotal">R$ 0,00</strong>';
+  floatingButton.hidden = true;
   floatingButton.addEventListener('click', () => openCart(true));
   document.body.appendChild(floatingButton);
 }
@@ -517,18 +637,35 @@ function attachGlobalEvents() {
 
   document.getElementById('orderType')?.addEventListener('change', (event) => {
     const addressField = document.getElementById('addressField');
+    const neighborhoodField = document.getElementById('neighborhoodField');
+    const complementField = document.getElementById('complementField');
     const shouldShow = event.target.value === 'delivery';
-    if (addressField) {
-      addressField.classList.toggle('hidden', !shouldShow);
-    }
+    [addressField, neighborhoodField, complementField].forEach((field) => field?.classList.toggle('hidden', !shouldShow));
+    const address = document.querySelector('[name="address"]');
+    const neighborhood = document.querySelector('[name="neighborhood"]');
+    if (address) address.required = shouldShow;
+    if (neighborhood) neighborhood.required = shouldShow;
   });
+  const orderTypeSelect = document.getElementById('orderType');
+  if (orderTypeSelect) orderTypeSelect.dispatchEvent(new Event('change'));
 
-  document.getElementById('checkoutForm')?.addEventListener('submit', (event) => {
+  document.getElementById('checkoutForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const errorEl = document.getElementById('checkoutError');
+    if (errorEl) errorEl.hidden = true;
+    if (!state.cart.length || state.cart.some((item) => item.unavailable)) {
+      if (errorEl) {
+        errorEl.textContent = 'Atualize ou remova os itens indisponíveis antes de continuar.';
+        errorEl.hidden = false;
+      }
+      return;
+    }
     const formData = new FormData(event.target);
     const orderType = formData.get('orderType');
     const customerName = String(formData.get('customerName') || '').trim();
     const address = String(formData.get('address') || '').trim();
+    const neighborhood = String(formData.get('neighborhood') || '').trim();
+    const complement = String(formData.get('complement') || '').trim();
     const paymentMethod = String(formData.get('paymentMethod') || 'Pix');
     const notes = String(formData.get('notes') || '').trim();
 
@@ -537,40 +674,106 @@ function attachGlobalEvents() {
       return;
     }
 
-    if (orderType === 'delivery' && !address) {
-      alert('Informe o endereço para delivery.');
+    if (orderType === 'delivery' && (!address || !neighborhood)) {
+      if (errorEl) {
+        errorEl.textContent = 'Informe o endereço e o bairro para delivery.';
+        errorEl.hidden = false;
+      }
       return;
     }
 
-    const total = state.cart.reduce((acc, item) => acc + getProductPrice(item.product) * item.quantity, 0);
-    const order = {
-      customerName,
-      orderType,
-      address: orderType === 'delivery' ? address : 'Retirada na loja',
-      paymentMethod,
-      notes,
-      total,
-      items: state.cart,
-    };
-    state.orderDraft = order;
-    renderReview(order);
-    closeCheckoutForm();
-    const reviewModal = document.getElementById('reviewModal');
-    if (reviewModal) reviewModal.classList.remove('hidden');
+    const submitButton = event.target.querySelector('[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    try {
+      const quote = await validateCart();
+      state.orderDraft = {
+        customerName,
+        orderType,
+        address,
+        neighborhood,
+        complement,
+        paymentMethod,
+        notes,
+        ...quote
+      };
+      renderReview(state.orderDraft);
+      closeCheckoutForm();
+      document.getElementById('reviewModal')?.classList.remove('hidden');
+    } catch (error) {
+      if (errorEl) {
+        errorEl.textContent = error.message;
+        errorEl.hidden = false;
+      }
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
   });
 
-  document.getElementById('sendToWhatsApp')?.addEventListener('click', () => {
-    if (!state.orderDraft) return;
-    const whatsappNumber = state.settings?.whatsappNumber || '554885003330';
-    const message = encodeURIComponent(createMessageFromOrder(state.orderDraft));
-    window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank', 'noopener,noreferrer');
-    closeReviewModal();
-    clearCart();
+  document.getElementById('sendToWhatsApp')?.addEventListener('click', async (event) => {
+    if (!state.orderDraft || state.sendingOrder) return;
+    const button = event.currentTarget;
+    const errorEl = document.getElementById('reviewError');
+    if (errorEl) errorEl.hidden = true;
+    const whatsappNumber = String(state.settings?.whatsappNumber || '').replace(/\D/g, '');
+    if (!/^55\d{10,11}$/.test(whatsappNumber)) {
+      if (errorEl) {
+        errorEl.textContent = 'O WhatsApp da loja não está configurado corretamente. Entre em contato com a loja.';
+        errorEl.hidden = false;
+      }
+      return;
+    }
+
+    const whatsappWindow = window.open('about:blank', '_blank');
+    if (!whatsappWindow) {
+      if (errorEl) {
+        errorEl.textContent = 'O navegador bloqueou a janela do WhatsApp. Permita pop-ups e tente novamente.';
+        errorEl.hidden = false;
+      }
+      return;
+    }
+
+    state.sendingOrder = true;
+    button.disabled = true;
+    try {
+      const quote = await validateCart();
+      const previousQuote = state.orderDraft;
+      const quoteChanged = quote.subtotal !== previousQuote.subtotal || quote.items.some((item, index) => {
+        const previous = previousQuote.items[index];
+        return !previous || item.product.id !== previous.product.id || item.product.name !== previous.product.name ||
+          item.product.unit !== previous.product.unit || item.quantity !== previous.quantity || item.unitPrice !== previous.unitPrice;
+      }) || quote.items.length !== previousQuote.items.length;
+
+      if (quoteChanged) {
+        whatsappWindow.close();
+        state.orderDraft = { ...previousQuote, ...quote };
+        renderReview(state.orderDraft);
+        if (errorEl) {
+          errorEl.textContent = 'Os preços, produtos ou a disponibilidade mudaram. Confira o pedido atualizado e envie novamente.';
+          errorEl.hidden = false;
+        }
+        return;
+      }
+
+      const order = { ...previousQuote, ...quote };
+      const message = encodeURIComponent(createMessageFromOrder(order));
+      whatsappWindow.location.href = `https://wa.me/${whatsappNumber}?text=${message}`;
+      closeReviewModal();
+      closeCart();
+      clearCart();
+    } catch (error) {
+      whatsappWindow.close();
+      if (errorEl) {
+        errorEl.textContent = error.message;
+        errorEl.hidden = false;
+      }
+    } finally {
+      state.sendingOrder = false;
+      button.disabled = false;
+    }
   });
 
-  document.getElementById('productSearch')?.addEventListener('input', () => loadProducts());
-  document.getElementById('categoryFilter')?.addEventListener('change', () => loadProducts());
-  document.getElementById('sortSelect')?.addEventListener('change', () => loadProducts());
+  document.getElementById('productSearch')?.addEventListener('input', () => renderProducts(getVisibleProducts()));
+  document.getElementById('sortSelect')?.addEventListener('change', () => renderProducts(getVisibleProducts()));
 
   document.addEventListener('click', (event) => {
     const target = event.target;
@@ -583,10 +786,31 @@ function attachGlobalEvents() {
 async function initializeStore() {
   await loadStoreSettings();
   await loadCategories();
+  const orderType = document.getElementById('orderType');
+  if (orderType && state.settings) {
+    const deliveryOption = orderType.querySelector('option[value="delivery"]');
+    const pickupOption = orderType.querySelector('option[value="retirada"]');
+    if (deliveryOption) deliveryOption.disabled = !state.settings.deliveryEnabled;
+    if (pickupOption) pickupOption.disabled = !state.settings.pickupEnabled;
+    if (deliveryOption?.disabled && pickupOption && !pickupOption.disabled) orderType.value = 'retirada';
+    if (pickupOption?.disabled && deliveryOption && !deliveryOption.disabled) orderType.value = 'delivery';
+    orderType.dispatchEvent(new Event('change'));
+  }
   await loadProducts();
   attachGlobalEvents();
   updateCartSummary();
   updateCartBadge();
+}
+
+async function validateCart() {
+  const response = await fetch('/api/orders/validate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: state.cart.map((item) => ({ productId: item.productId, quantity: item.quantity })) })
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.message || 'Não foi possível validar o carrinho.');
+  return payload;
 }
 
 document.addEventListener('DOMContentLoaded', initializeStore);

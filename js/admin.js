@@ -397,7 +397,7 @@ function productPayload(form, image) {
 
 async function saveProduct(event) {
   event.preventDefault();
-  const form = event.currentTarget;
+  const form = event.target;
   const submitButton = form.querySelector('[type="submit"]');
   const productId = form.elements.productId.value;
   const file = form.elements.productImage.files[0];
@@ -430,7 +430,7 @@ async function saveProduct(event) {
 
 async function saveCategory(event) {
   event.preventDefault();
-  const form = event.currentTarget;
+  const form = event.target;
   const submitButton = form.querySelector('[type="submit"]');
   const id = form.elements.categoryId.value;
   setBusy(submitButton, true, 'Salvando...');
@@ -451,7 +451,7 @@ async function saveCategory(event) {
 
 async function saveSettings(event) {
   event.preventDefault();
-  const form = event.currentTarget;
+  const form = event.target;
   const submitButton = form.querySelector('[type="submit"]');
   setBusy(submitButton, true, 'Salvando configurações...');
   const payload = {

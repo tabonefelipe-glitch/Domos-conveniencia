@@ -18,6 +18,9 @@ if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || !pr
 }
 
 const app = express();
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 const PORT = Number(process.env.PORT || 3000);
 const rootDir = __dirname;
 const uploadsDir = path.join(rootDir, 'uploads');

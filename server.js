@@ -340,7 +340,7 @@ async function initializeDatabase() {
 
   const defaultEmail = process.env.ADMIN_EMAIL || 'admin@domus.com';
   const defaultPassword = process.env.ADMIN_PASSWORD || 'domus123';
-  const adminExists = await dbGet('SELECT id FROM admin_users WHERE email = ?', [defaultEmail]);
+  const adminExists = await dbGet('SELECT id, password_hash FROM admin_users WHERE email = ?', [defaultEmail]);
 
   if (!adminExists) {
     const hash = await bcrypt.hash(defaultPassword, 10);
@@ -349,6 +349,9 @@ async function initializeDatabase() {
     } else {
       await dbRun('INSERT INTO admin_users (name, email, password_hash) VALUES (?, ?, ?)', ['Administrador', defaultEmail, hash]);
     }
+  } else if (process.env.ADMIN_PASSWORD && !(await bcrypt.compare(process.env.ADMIN_PASSWORD, adminExists.password_hash))) {
+    const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+    await dbRun('UPDATE admin_users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [hash, adminExists.id]);
   }
 
   const seedCategories = [

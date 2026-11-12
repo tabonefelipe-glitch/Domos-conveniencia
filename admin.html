@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#090908" />
+    <meta name="theme-color" content="#191919" />
     <title>Painel administrativo | Domus Conveniência</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,186 +13,106 @@
     <script src="js/admin.js" defer></script>
   </head>
   <body class="admin-body">
-    <header class="admin-header">
-      <div class="container admin-topbar">
-        <a class="brand-logo" href="/" aria-label="Voltar para o site">
-          <img src="assets/images/logo-domus-horizontal.png" alt="Logo da Domus Conveniência" width="2172" height="724" />
+    <div id="authLoading" class="auth-loading" role="status">Verificando acesso...</div>
+
+    <main id="loginView" class="auth-layout hidden">
+      <section class="auth-brand-panel" aria-label="Domus Conveniência">
+        <a class="auth-logo" href="/" aria-label="Ir para a loja">
+          <img src="assets/images/logo-domus-horizontal.png" alt="Domus Conveniência" width="2172" height="724" />
         </a>
-        <div class="admin-actions">
-          <a class="button button-text" href="/shop.html">Abrir loja</a>
-          <button class="button button-primary hidden" id="logoutBtn" type="button">Sair</button>
+        <div class="auth-brand-copy">
+          <span class="auth-kicker">GESTÃO DA LOJA</span>
+          <p>Seu negócio, organizado em um só lugar.</p>
         </div>
-      </div>
-    </header>
-
-    <main class="admin-main">
-      <section id="loginSection" class="container admin-card login-box hidden">
-        <div>
-          <p class="eyebrow"><span class="eyebrow-line"></span> Acesso restrito</p>
-          <h1>Painel administrativo</h1>
-        </div>
-        <form id="loginForm" class="admin-form">
-          <label>
-            <span>E-mail</span>
-            <input type="email" name="email" placeholder="admin@domus.com" required />
-          </label>
-          <label>
-            <span>Senha</span>
-            <input type="password" name="password" placeholder="Sua senha" required />
-          </label>
-          <button type="submit" class="button button-primary">Entrar</button>
-        </form>
+        <span class="auth-brand-index" aria-hidden="true">DOMUS / ADMIN</span>
       </section>
-
-      <section id="adminDashboard" class="container admin-dashboard hidden">
-        <div class="admin-card stats-grid">
-          <div class="stat-card"><span>Total de produtos</span><strong id="statTotalProducts">0</strong></div>
-          <div class="stat-card"><span>Produtos ativos</span><strong id="statActiveProducts">0</strong></div>
-          <div class="stat-card"><span>Indisponíveis</span><strong id="statUnavailableProducts">0</strong></div>
-          <div class="stat-card"><span>Em promoção</span><strong id="statPromoProducts">0</strong></div>
-          <div class="stat-card"><span>Total de categorias</span><strong id="statTotalCategories">0</strong></div>
-        </div>
-
-        <div class="admin-layout">
-          <section class="admin-card">
-            <div class="section-header"><h2>Categorias</h2></div>
-            <form id="categoryForm" class="admin-form compact-form">
-              <input type="hidden" name="categoryId" />
-              <label>
-                <span>Nome</span>
-                <input type="text" name="categoryName" placeholder="Ex.: Bebidas" required />
-              </label>
-              <label>
-                <span>Status</span>
-                <select name="categoryStatus">
-                  <option value="active">Ativa</option>
-                  <option value="inactive">Inativa</option>
-                </select>
-              </label>
-              <div class="form-actions">
-                <button type="submit" class="button button-primary">Salvar</button>
-                <button type="button" class="button button-secondary" id="resetCategoryForm">Cancelar</button>
-              </div>
-            </form>
-            <div id="categoryList" class="list-panel"></div>
-          </section>
-
-          <section class="admin-card">
-            <div class="section-header"><h2>Produtos</h2></div>
-            <form id="productForm" class="admin-form compact-form">
-              <input type="hidden" name="productId" />
-              <label>
-                <span>Nome</span>
-                <input type="text" name="name" required />
-              </label>
-              <label>
-                <span>Categoria</span>
-                <select name="categoryId" id="productCategorySelect"></select>
-              </label>
-              <label class="full-width">
-                <span>Descrição</span>
-                <textarea name="description" rows="3"></textarea>
-              </label>
-              <label>
-                <span>Preço</span>
-                <input type="number" step="0.01" name="price" min="0" required />
-              </label>
-              <label>
-                <span>Preço promocional</span>
-                <input type="number" step="0.01" name="promotionalPrice" min="0" />
-              </label>
-              <label>
-                <span>Estoque</span>
-                <input type="number" name="stock" min="0" value="0" />
-              </label>
-              <label>
-                <span>Unidade</span>
-                <input type="text" name="unit" value="unidade" />
-              </label>
-              <label>
-                <span>Imagem</span>
-                <input type="text" name="image" maxlength="2048" placeholder="https://... ou /uploads/..." />
-              </label>
-              <label>
-                <span>Arquivo</span>
-                <input type="file" name="productImage" accept="image/*" />
-              </label>
-              <label>
-                <span>Status</span>
-                <select name="status">
-                  <option value="active">Ativo</option>
-                  <option value="inactive">Inativo</option>
-                </select>
-              </label>
-              <label>
-                <span>Disponibilidade</span>
-                <select name="available">
-                  <option value="1">Disponível</option>
-                  <option value="0">Indisponível</option>
-                </select>
-              </label>
-              <label>
-                <span>Destaque</span>
-                <select name="featured">
-                  <option value="0">Não</option>
-                  <option value="1">Sim</option>
-                </select>
-              </label>
-              <label>
-                <span>Promoção</span>
-                <select name="promotion">
-                  <option value="0">Não</option>
-                  <option value="1">Sim</option>
-                </select>
-              </label>
-              <div class="form-actions full-width">
-                <button type="submit" class="button button-primary">Salvar produto</button>
-                <button type="button" class="button button-secondary" id="resetProductForm">Cancelar</button>
-              </div>
-            </form>
-            <div id="productList" class="list-panel"></div>
-          </section>
-
-          <section class="admin-card">
-            <div class="section-header"><h2>Configurações da loja</h2></div>
-            <form id="settingsForm" class="admin-form compact-form">
-              <label>
-                <span>Nome da loja</span>
-                <input type="text" name="storeName" />
-              </label>
-              <label>
-                <span>Número do WhatsApp</span>
-                <input type="text" name="whatsappNumber" placeholder="554885003330" />
-              </label>
-              <label class="full-width">
-                <span>Mensagem inicial do pedido</span>
-                <textarea name="whatsappMessage" rows="3"></textarea>
-              </label>
-              <label>
-                <span>Delivery</span>
-                <select name="deliveryEnabled">
-                  <option value="1">Habilitado</option>
-                  <option value="0">Desabilitado</option>
-                </select>
-              </label>
-              <label>
-                <span>Retirada</span>
-                <select name="pickupEnabled">
-                  <option value="1">Habilitado</option>
-                  <option value="0">Desabilitado</option>
-                </select>
-              </label>
-              <label class="full-width">
-                <span>Informações de contato</span>
-                <textarea name="contactInfo" rows="3"></textarea>
-              </label>
-              <div class="form-actions full-width">
-                <button type="submit" class="button button-primary">Salvar configurações</button>
-              </div>
-            </form>
-          </section>
+      <section class="auth-form-panel">
+        <div class="auth-form-wrap">
+          <p class="admin-eyebrow">ÁREA RESTRITA</p>
+          <h1>Acesse seu painel</h1>
+          <p class="auth-description">Entre com as credenciais administrativas da Domus Conveniência.</p>
+          <form id="loginForm" class="admin-form">
+            <label class="field-label">
+              <span>E-mail</span>
+              <input type="email" name="email" autocomplete="username" placeholder="seu@email.com" required />
+            </label>
+            <label class="field-label">
+              <span>Senha</span>
+              <input type="password" name="password" autocomplete="current-password" placeholder="Sua senha" required />
+            </label>
+            <button type="submit" class="admin-button admin-button-primary auth-submit">Entrar no painel <span aria-hidden="true">→</span></button>
+          </form>
+          <a class="auth-back-link" href="/shop.html">Voltar para a loja</a>
         </div>
       </section>
     </main>
+
+    <div id="adminApp" class="admin-app hidden">
+      <aside id="adminSidebar" class="admin-sidebar" aria-label="Navegação principal">
+        <a class="sidebar-brand" href="/" aria-label="Domus Conveniência, página inicial">
+          <img src="assets/images/logo-domus-horizontal.png" alt="Domus Conveniência" width="2172" height="724" />
+        </a>
+        <span class="sidebar-section-label">MENU PRINCIPAL</span>
+        <nav class="sidebar-nav">
+          <button type="button" class="nav-item is-active" data-page="overview" aria-current="page">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            Visão geral
+          </button>
+          <button type="button" class="nav-item" data-page="products">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg>
+            Produtos <span id="navProductCount" class="nav-count">0</span>
+          </button>
+          <button type="button" class="nav-item" data-page="categories">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+            Categorias
+          </button>
+          <button type="button" class="nav-item" data-page="settings">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z" transform="translate(-1 -1) scale(1.08)"/></svg>
+            Configurações
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="sidebar-store-chip"><span class="store-status-dot"></span><span id="sidebarStoreName">Domus Conveniência</span></div>
+          <a class="sidebar-external-link" href="/shop.html" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7M21 3l-9 9"/><path d="M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/></svg>
+            Visualizar loja <span aria-hidden="true">↗</span>
+          </a>
+          <button id="logoutBtn" class="sidebar-logout" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>
+            Sair do painel
+          </button>
+        </div>
+      </aside>
+      <button id="sidebarBackdrop" class="sidebar-backdrop" type="button" aria-label="Fechar menu"></button>
+
+      <div class="admin-frame">
+        <header class="admin-topbar">
+          <div class="topbar-heading">
+            <button id="menuToggle" class="icon-button menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+            <div>
+              <div id="breadcrumb" class="admin-breadcrumb"><span>Painel</span><span aria-hidden="true">/</span><strong>Visão geral</strong></div>
+              <h1 id="pageTitle">Visão geral</h1>
+            </div>
+          </div>
+          <div class="topbar-store">
+            <span class="topbar-store-mark" aria-hidden="true">D</span>
+            <span><strong id="topbarStoreName">Domus Conveniência</strong><small>Loja conectada</small></span>
+            <span class="store-status-dot" aria-label="Online"></span>
+          </div>
+        </header>
+        <main id="pageContent" class="admin-content" tabindex="-1"></main>
+      </div>
+    </div>
+
+    <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <dialog id="editorDialog" class="admin-dialog">
+      <div id="editorContent"></div>
+    </dialog>
+    <dialog id="confirmDialog" class="admin-dialog confirm-dialog">
+      <div id="confirmContent"></div>
+    </dialog>
   </body>
 </html>

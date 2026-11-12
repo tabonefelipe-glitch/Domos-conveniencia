@@ -40,7 +40,7 @@ Em produção, `SESSION_SECRET` e `ADMIN_PASSWORD` são obrigatórios. As creden
 - `/shop.html` ou `/loja`: catálogo, carrinho e checkout
 - `/admin`: painel protegido para produtos, categorias e configurações
 - `/api/products` e `/api/categories`: catálogo público
-- `/api/orders/validate`: valida disponibilidade, estoque e preços atuais antes do pedido
+- `/api/orders/validate`: valida disponibilidade e preços atuais antes do pedido
 - `/api/health`: verificação de saúde do serviço
 
 O carrinho é armazenado no navegador. A validação do pedido usa os dados atuais do banco; a loja confirma pelo WhatsApp a disponibilidade final e eventual taxa de entrega. Nenhum pagamento é simulado ou aprovado pelo site.
@@ -98,7 +98,7 @@ As informações editáveis ficam no objeto `DOMUS_CONFIG`, no início de `js/sc
 - `businessHours`, `delivery`, `pickup` e `paymentMethods`: dados comerciais opcionais; vazios por padrão e ocultos até confirmação
 - `googleRating` e `googleReviewCount`: nota média e total de avaliações do Maps
 
-O número e a mensagem oficial de WhatsApp estão configurados no JavaScript. O endereço e os dados de reputação foram confirmados na ficha pública do Google Maps; horários, preços, promoções e estoque não são declarados pelo site. As categorias refletem as fotografias disponíveis; consulte a loja sobre disponibilidade atual.
+O número e a mensagem oficial de WhatsApp estão configurados no JavaScript. O endereço e os dados de reputação foram confirmados na ficha pública do Google Maps; horários, preços, promoções e disponibilidade podem variar. As categorias refletem as fotografias disponíveis; consulte a loja para confirmar os detalhes atuais.
 
 ## Imagens
 

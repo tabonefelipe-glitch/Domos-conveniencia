@@ -164,7 +164,7 @@ function updateCartSummary() {
           <div class="qty-row">
             <button type="button" data-qty-change="-${item.productId}" aria-label="Diminuir quantidade de ${escapeHTML(product.name)}">-</button>
             <span>${item.quantity}</span>
-            <button type="button" data-qty-change="+${item.productId}" aria-label="Aumentar quantidade de ${escapeHTML(product.name)}" ${item.unavailable || item.quantity >= Number(product.stock || 0) ? 'disabled' : ''}>+</button>
+            <button type="button" data-qty-change="+${item.productId}" aria-label="Aumentar quantidade de ${escapeHTML(product.name)}" ${item.unavailable ? 'disabled' : ''}>+</button>
           </div>
           ${item.unavailable ? '<small>Indisponível. Remova para continuar.</small>' : ''}
           <strong>Subtotal: ${formatMoney(lineTotal)}</strong>
@@ -196,19 +196,17 @@ function updateCartSummary() {
 function addToCart(product, quantity = 1) {
   const safeProduct = { ...product };
   const productId = Number(safeProduct.id);
-  const stock = Number(safeProduct.stock || 0);
-  if (safeProduct.available !== true || stock <= 0 || !Number.isInteger(productId)) {
+  if (safeProduct.available !== true || !Number.isInteger(productId)) {
     return;
   }
 
   const existing = getCartItem(productId);
   if (existing) {
-    const nextQty = existing.quantity + quantity;
-    existing.quantity = Math.min(nextQty, stock);
+    existing.quantity += quantity;
     existing.product = safeProduct;
     existing.unavailable = false;
   } else {
-    state.cart.push({ productId, product: safeProduct, quantity: Math.min(quantity, stock), unavailable: false });
+    state.cart.push({ productId, product: safeProduct, quantity, unavailable: false });
   }
 
   saveCart();
@@ -234,9 +232,8 @@ function changeQuantity(productId, delta) {
     return;
   }
 
-  const maxStock = Number(item.product.stock || 0);
-  if (delta > 0 && (item.unavailable || maxStock <= 0)) return;
-  item.quantity = Math.min(nextQty, maxStock);
+  if (delta > 0 && item.unavailable) return;
+  item.quantity = nextQty;
   saveCart();
   updateCartSummary();
   renderLandingFeaturedProducts();
@@ -262,7 +259,7 @@ function renderProducts(products) {
 
   productGrid.innerHTML = products.map((product) => {
     const hasDiscount = product.promotion && Number(product.promotionalPrice) > 0 && Number(product.promotionalPrice) < Number(product.price || 0);
-    const isAvailable = product.available !== false && Number(product.stock || 0) > 0;
+    const isAvailable = product.available !== false;
     const productPrice = getProductPrice(product);
     const cartItem = getCartItem(product.id);
     const quantity = cartItem?.quantity || 0;
@@ -288,8 +285,8 @@ function renderProducts(products) {
             <span class="unit-label">${escapeHTML(product.unit || 'unidade')}</span>
           </div>
           <div class="product-actions">
-            ${quantity ? `<div class="qty-row product-quantity"><button type="button" data-product-qty="-${product.id}" aria-label="Diminuir ${escapeHTML(product.name)}">-</button><span>${quantity}</span><button type="button" data-product-qty="+${product.id}" aria-label="Aumentar ${escapeHTML(product.name)}" ${!isAvailable || quantity >= Number(product.stock || 0) ? 'disabled' : ''}>+</button></div>` : ''}
-            <button type="button" class="button button-primary" data-add-cart="${product.id}" ${!isAvailable || quantity >= Number(product.stock || 0) ? 'disabled' : ''}>${isAvailable ? (quantity ? 'Adicionar mais' : 'Adicionar') : 'Indisponível'}</button>
+            ${quantity ? `<div class="qty-row product-quantity"><button type="button" data-product-qty="-${product.id}" aria-label="Diminuir ${escapeHTML(product.name)}">-</button><span>${quantity}</span><button type="button" data-product-qty="+${product.id}" aria-label="Aumentar ${escapeHTML(product.name)}" ${!isAvailable ? 'disabled' : ''}>+</button></div>` : ''}
+            <button type="button" class="button button-primary" data-add-cart="${product.id}" ${!isAvailable ? 'disabled' : ''}>${isAvailable ? (quantity ? 'Adicionar mais' : 'Adicionar') : 'Indisponível'}</button>
           </div>
         </div>
       </article>
@@ -325,7 +322,7 @@ function openProductModal(product) {
   const content = document.getElementById('modalContent');
   if (!modal || !content) return;
 
-  const available = product.available !== false && Number(product.stock || 0) > 0;
+  const available = product.available !== false;
   const price = getProductPrice(product);
   const oldPrice = Number(product.price || 0);
 
@@ -356,8 +353,7 @@ function openProductModal(product) {
   let quantity = 1;
   const qtyEl = document.getElementById('currentQty');
   const setQty = (value) => {
-    const maxStock = Number(product.stock || 999);
-    quantity = Math.max(1, Math.min(value, maxStock || value));
+    quantity = Math.max(1, value);
     if (qtyEl) qtyEl.textContent = String(quantity);
   };
 
@@ -473,7 +469,7 @@ function renderLandingFeaturedProducts() {
   if (!grid) return;
 
   const products = state.products
-    .filter((product) => product.available === true && Number(product.stock) > 0)
+    .filter((product) => product.featured === true && product.available === true)
     .slice(0, 6);
   if (!products.length) {
     grid.innerHTML = '<p class="landing-products-status">Os produtos da loja estarão disponíveis em breve.</p>';
@@ -501,7 +497,7 @@ function renderLandingFeaturedProducts() {
             <div>${hasPrice ? (hasDiscount ? `<strong>${formatMoney(price)}</strong><span class="old-price">${formatMoney(product.price)}</span>` : `<strong>${formatMoney(price)}</strong>`) : '<strong>Consulte na loja</strong>'}</div>
             <span class="unit-label">${escapeHTML(product.unit || 'unidade')}</span>
           </div>
-          <button type="button" class="button button-primary" data-landing-add="${Number(product.id)}" ${quantity >= Number(product.stock) ? 'disabled' : ''}>${quantity ? `Adicionar mais (${quantity})` : 'Adicionar ao carrinho'}</button>
+          <button type="button" class="button button-primary" data-landing-add="${Number(product.id)}">${quantity ? `Adicionar mais (${quantity})` : 'Adicionar ao carrinho'}</button>
         </div>
       </article>
     `;
@@ -539,7 +535,7 @@ async function loadProducts() {
     state.cart = state.cart.map((item) => {
       const current = latestById.get(item.productId);
       return current
-        ? { ...item, product: current, unavailable: current.available !== true || Number(current.stock) < item.quantity }
+        ? { ...item, product: current, unavailable: current.available !== true }
         : { ...item, unavailable: true };
     });
     saveCart();

@@ -1197,7 +1197,7 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
 .metric-charcoal { background: #efeeeb; color: #555149; }
 .metric-label { min-width: 0; color: var(--admin-muted); font-size: 10px; font-weight: 700; line-height: 1.35; }
 .metric-card strong { align-self: end; color: #25231f; font-size: 26px; font-weight: 700; line-height: 1; }
-.dashboard-grid { display: grid; grid-template-columns: 1.1fr 1fr .95fr; align-items: start; gap: 14px; }
+.dashboard-grid { display: grid; grid-template-columns: 1.1fr .95fr; align-items: start; gap: 14px; }
 .admin-panel { min-width: 0; border: 1px solid var(--admin-line); border-radius: 5px; background: var(--admin-paper); box-shadow: 0 2px 8px rgba(38, 33, 22, .025); }
 .dashboard-panel { overflow: hidden; }
 .panel-heading { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-bottom: 1px solid #efede8; }
@@ -1224,8 +1224,6 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
 .compact-product-copy small,
 .compact-row-meta { color: #8b877f; font-size: 9px; }
 .compact-row-meta { flex: 0 0 auto; margin-left: auto; }
-.stock-count { flex: 0 0 auto; margin-left: auto; color: #527a60; font-size: 10px; font-weight: 800; }
-.stock-count.is-empty { color: #a44e44; }
 .panel-footer-link { min-height: 42px; width: 100%; justify-content: flex-start; padding: 0 16px; border-top: 1px solid #efede8; }
 .category-quick-list { padding: 4px 15px; }
 .category-quick-row { min-height: 52px; display: flex; align-items: center; gap: 9px; border-bottom: 1px solid #f1efea; }
@@ -1277,10 +1275,6 @@ h2 { max-width: 650px; margin-bottom: 0; font-size: clamp(36px, 4vw, 54px); }
 .table-price small { color: #a3584c; font-size: 9px; font-weight: 600; }
 .table-promo-price { color: #a3584c; }
 .table-no-promo { color: #aaa59a; font-weight: 500; }
-.stock-value { white-space: nowrap; }
-.stock-value small { color: #89857d; font-size: 9px; }
-.stock-low { color: #a45b3c; font-weight: 800; }
-.stock-low i { width: 6px; height: 6px; display: inline-block; margin-right: 4px; border-radius: 50%; background: #c9824e; }
 .status-stack { display: flex; flex-wrap: wrap; gap: 4px; }
 .status-pill { width: fit-content; min-height: 20px; display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; border-radius: 3px; font-size: 8px; font-weight: 800; white-space: nowrap; }
 .status-pill i { width: 5px; height: 5px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }

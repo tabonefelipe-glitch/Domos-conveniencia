@@ -83,7 +83,6 @@ function validateProductPayload(input) {
   const promotionalPrice = input.promotionalPrice === '' || input.promotionalPrice === null || input.promotionalPrice === undefined
     ? null
     : Number(input.promotionalPrice);
-  const stock = Number(input.stock ?? 0);
   const categoryId = input.categoryId === '' || input.categoryId === null || input.categoryId === undefined
     ? null
     : Number(input.categoryId);
@@ -97,7 +96,6 @@ function validateProductPayload(input) {
   if (promotionalPrice !== null && (!Number.isFinite(promotionalPrice) || promotionalPrice <= 0 || promotionalPrice >= price)) {
     return { error: 'O preço promocional deve ser positivo e menor que o preço normal.' };
   }
-  if (!Number.isInteger(stock) || stock < 0 || stock > 1000000) return { error: 'O estoque deve ser um número inteiro válido.' };
   if (categoryId !== null && (!Number.isInteger(categoryId) || categoryId <= 0)) return { error: 'A categoria selecionada é inválida.' };
   if (unit.length > 40) return { error: 'A unidade deve ter até 40 caracteres.' };
   if (image.length > 2048 || (image && !/^https:\/\//i.test(image) && !/^\/(uploads|assets\/images)\//i.test(image))) {
@@ -113,7 +111,6 @@ function validateProductPayload(input) {
       price,
       promotionalPrice,
       image,
-      stock,
       unit: unit || 'unidade',
       status,
       available: parseBoolean(input.available) ? 1 : 0,
@@ -139,7 +136,6 @@ function formatProduct(product) {
       ? Number(product.promotional_price)
       : null,
     image: product.image || '',
-    stock: Number(product.stock || 0),
     unit: product.unit || 'unidade',
     status: product.status || 'active',
     available: parseBoolean(product.available),
@@ -551,9 +547,9 @@ app.post('/api/orders/validate', async (req, res) => {
 
     for (const [productId, quantity] of quantities) {
       const product = products.get(productId);
-      if (!product || product.status !== 'active' || !product.available || product.stock < quantity) {
+      if (!product || product.status !== 'active' || !product.available) {
         return res.status(409).json({
-          message: `"${product?.name || 'Um produto'}" está indisponível ou não possui estoque suficiente. Atualize o carrinho.`,
+          message: `"${product?.name || 'Um produto'}" está indisponível. Atualize o carrinho.`,
           productId
         });
       }
@@ -782,8 +778,8 @@ app.post('/api/admin/products', requireAdmin, async (req, res) => {
     }
 
     const result = await dbRun(`
-      INSERT INTO products (name, description, category_id, price, promotional_price, image, stock, unit, status, available, featured, promotion)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products (name, description, category_id, price, promotional_price, image, unit, status, available, featured, promotion)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       product.name,
       product.description,
@@ -791,7 +787,6 @@ app.post('/api/admin/products', requireAdmin, async (req, res) => {
       product.price,
       product.promotionalPrice,
       product.image,
-      product.stock,
       product.unit,
       product.status,
       product.available,
@@ -826,7 +821,6 @@ app.put('/api/admin/products/:id', requireAdmin, async (req, res) => {
         price = ?,
         promotional_price = ?,
         image = ?,
-        stock = ?,
         unit = ?,
         status = ?,
         available = ?,
@@ -841,7 +835,6 @@ app.put('/api/admin/products/:id', requireAdmin, async (req, res) => {
       product.price,
       product.promotionalPrice,
       product.image,
-      product.stock,
       product.unit,
       product.status,
       product.available,

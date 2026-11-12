@@ -692,6 +692,11 @@ app.post('/api/admin/categories', requireAdmin, async (req, res) => {
 
     const categoryName = String(name).trim();
     const categoryStatus = status === 'inactive' ? 'inactive' : 'active';
+    const existingCategory = await dbGet('SELECT id FROM categories WHERE LOWER(name) = LOWER(?)', [categoryName]);
+    if (existingCategory) {
+      return res.status(409).json({ message: 'Já existe uma categoria com esse nome. Edite a categoria existente.' });
+    }
+
     const result = await dbRun('INSERT INTO categories (name, status) VALUES (?, ?)', [categoryName, categoryStatus]);
     const category = await dbGet('SELECT * FROM categories WHERE id = ?', [result.id]);
     res.status(201).json(category);
@@ -705,12 +710,18 @@ app.put('/api/admin/categories/:id', requireAdmin, async (req, res) => {
   try {
     const { name, status = 'active' } = req.body;
     const categoryId = Number(req.params.id);
+    const categoryName = String(name || '').trim();
 
-    if (!name || !String(name).trim()) {
+    if (!categoryName) {
       return res.status(400).json({ message: 'O nome da categoria é obrigatório.' });
     }
 
-    await dbRun('UPDATE categories SET name = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [String(name).trim(), status === 'inactive' ? 'inactive' : 'active', categoryId]);
+    const existingCategory = await dbGet('SELECT id FROM categories WHERE LOWER(name) = LOWER(?) AND id <> ?', [categoryName, categoryId]);
+    if (existingCategory) {
+      return res.status(409).json({ message: 'Já existe outra categoria com esse nome.' });
+    }
+
+    await dbRun('UPDATE categories SET name = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [categoryName, status === 'inactive' ? 'inactive' : 'active', categoryId]);
     const category = await dbGet('SELECT * FROM categories WHERE id = ?', [categoryId]);
     res.json(category);
   } catch (error) {

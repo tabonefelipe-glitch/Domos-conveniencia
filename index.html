@@ -23,7 +23,7 @@
   <script src="js/store.js" defer></script>
   <script src="js/script.js" defer></script>
 </head>
-<body>
+<body class="home-body">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
     <symbol id="icon-cart" viewBox="0 0 24 24">
@@ -91,11 +91,11 @@
       </button>
       <nav class="site-nav" id="site-nav" aria-label="Navegação principal">
         <a href="#inicio">Início</a>
-        <a href="#sobre">A Domus</a>
-        <a href="/shop.html">Loja</a>
         <a href="#produtos">Produtos</a>
+        <a href="#sobre">A Domus</a>
         <a href="#localizacao">Localização</a>
         <a href="#contato">Contato</a>
+        <a class="nav-shop" href="/shop.html">Comprar online</a>
         <a class="nav-whatsapp" data-contact="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Fale pelo WhatsApp com a Domus" hidden><svg class="icon-whatsapp" aria-hidden="true"><use href="#icon-whatsapp"></use></svg><span>Fale pelo WhatsApp</span></a>
         <button class="cart-trigger" type="button" data-cart-trigger aria-label="Abrir carrinho">
           <svg class="icon-cart" aria-hidden="true"><use href="#icon-cart"></use></svg>
@@ -132,6 +132,26 @@
       <div class="hero-bottom container"><span>CONVENIÊNCIA PARA O SEU DIA</span><span data-business-label>DOMUS CONVENIÊNCIA | CAMPINAS, SÃO JOSÉ - SC</span></div>
     </section>
 
+    <section class="shopping-entry section-pad" aria-labelledby="shopping-entry-title">
+      <div class="container shopping-entry-layout">
+        <div class="shopping-entry-photo reveal">
+          <img src="assets/images/domus-vitrine.jpg" alt="Vitrine de alimentos disponíveis na Domus Conveniência" width="202" height="270" loading="lazy" decoding="async">
+          <span class="shopping-photo-label">A DOMUS, TAMBÉM ONLINE</span>
+        </div>
+        <div class="shopping-entry-copy reveal">
+          <p class="eyebrow"><span class="eyebrow-line"></span> Sua conveniência, a um clique</p>
+          <h2 id="shopping-entry-title">Faça suas compras <em>sem complicação.</em></h2>
+          <p>Encontre seus produtos favoritos, monte seu carrinho e faça seu pedido diretamente pelo site da Domus.</p>
+          <ol class="shopping-steps">
+            <li><span>01</span> Escolha seus produtos</li>
+            <li><span>02</span> Monte seu carrinho</li>
+            <li><span>03</span> Envie o pedido pelo WhatsApp</li>
+          </ol>
+          <a class="button button-primary shopping-entry-button" href="/shop.html">COMEÇAR A COMPRAR <svg class="icon-inline icon-arrow" aria-hidden="true"><use href="#icon-arrow-right"></use></svg></a>
+        </div>
+      </div>
+    </section>
+
     <section class="categories section-pad" id="produtos" aria-labelledby="categories-title">
       <div class="container">
         <div class="section-heading reveal">
@@ -142,28 +162,43 @@
           <p class="section-intro">Praticidade para diferentes momentos do seu dia.</p>
         </div>
         <div class="category-grid">
-          <article class="category-card category-card-tall reveal">
+          <a class="category-card category-card-tall reveal" data-category-link="Bebidas" href="/shop.html#produtos">
             <img src="assets/images/domus-bebidas.jpg" alt="Refrigeradores de bebidas na Domus Conveniência" width="195" height="325" loading="lazy" decoding="async">
             <div class="category-overlay"><span class="category-number">01</span><h3>Bebidas</h3><span class="category-arrow" aria-hidden="true"><svg class="icon-inline"><use href="#icon-arrow-up-right"></use></svg></span></div>
-          </article>
-          <article class="category-card reveal">
+          </a>
+          <a class="category-card reveal" data-category-link="Produtos para churrasco" href="/shop.html#produtos">
             <img src="assets/images/domus-churrasco.jpg" alt="Carvão para churrasco exposto na Domus Conveniência" width="224" height="298" loading="lazy" decoding="async">
             <div class="category-overlay"><span class="category-number">02</span><h3>Produtos para churrasco</h3><span class="category-arrow" aria-hidden="true"><svg class="icon-inline"><use href="#icon-arrow-up-right"></use></svg></span></div>
-          </article>
-          <article class="category-card reveal">
+          </a>
+          <a class="category-card reveal" data-category-link="Pão de queijo e salgados" href="/shop.html#produtos">
             <img src="assets/images/domus-pao-de-queijo.jpg" alt="Pães de queijo na vitrine da Domus Conveniência" width="202" height="270" loading="lazy" decoding="async">
             <div class="category-overlay"><span class="category-number">03</span><h3>Pão de queijo e salgados</h3><span class="category-arrow" aria-hidden="true"><svg class="icon-inline"><use href="#icon-arrow-up-right"></use></svg></span></div>
-          </article>
-          <article class="category-card category-card-wide reveal">
+          </a>
+          <a class="category-card category-card-wide reveal" data-category-link="Congelados e refrigerados" href="/shop.html#produtos">
             <img src="assets/images/domus-freezer.jpg" alt="Produtos congelados em freezer na Domus Conveniência" width="202" height="270" loading="lazy" decoding="async">
             <div class="category-overlay"><span class="category-number">04</span><h3>Congelados e refrigerados</h3><span class="category-arrow" aria-hidden="true"><svg class="icon-inline"><use href="#icon-arrow-up-right"></use></svg></span></div>
-          </article>
-          <article class="category-card category-card-everyday reveal">
+          </a>
+          <a class="category-card category-card-everyday reveal" href="/shop.html">
             <img src="assets/images/domus-interior.jpg" alt="Visão do balcão e das prateleiras da Domus Conveniência" width="202" height="270" loading="lazy" decoding="async">
             <div class="category-overlay"><span class="category-number">05</span><h3>Conheça a loja</h3><span class="category-arrow" aria-hidden="true"><svg class="icon-inline"><use href="#icon-arrow-up-right"></use></svg></span></div>
-          </article>
+          </a>
         </div>
         <p class="category-disclaimer">A disponibilidade dos produtos pode variar. Consulte a loja.</p>
+      </div>
+    </section>
+
+    <section class="featured-products section-pad" aria-labelledby="featured-products-title">
+      <div class="container">
+        <div class="featured-heading reveal">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span> Da loja para o seu carrinho</p>
+            <h2 id="featured-products-title">Destaques <em>da Domus.</em></h2>
+          </div>
+          <a class="text-link" href="/shop.html">VER TODOS OS PRODUTOS <svg class="icon-inline icon-arrow" aria-hidden="true"><use href="#icon-arrow-right"></use></svg></a>
+        </div>
+        <div class="landing-product-grid" id="landingFeaturedProducts" aria-live="polite" aria-busy="true">
+          <p class="landing-products-status">Carregando produtos da loja...</p>
+        </div>
       </div>
     </section>
 
@@ -278,6 +313,13 @@
     </div>
     <div class="container footer-bottom"><span>© <span id="current-year"></span> <span data-company-name>Domus Conveniência</span>. Todos os direitos reservados.</span><a href="#topo">Voltar ao topo <svg class="icon-inline icon-arrow" aria-hidden="true"><use href="#icon-arrow-up"></use></svg></a></div>
   </footer>
+  <nav class="landing-quickbar" aria-label="Acesso rápido à loja e ao carrinho">
+    <a class="button button-primary" href="/shop.html">Ver loja <svg class="icon-inline" aria-hidden="true"><use href="#icon-arrow-right"></use></svg></a>
+    <button class="quickbar-cart" type="button" data-cart-trigger aria-label="Abrir carrinho">
+      <svg class="icon-cart" aria-hidden="true"><use href="#icon-cart"></use></svg>
+      <span>Carrinho</span><b data-cart-count>0</b>
+    </button>
+  </nav>
   <a class="whatsapp-float" data-contact="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="Fale conosco pelo WhatsApp" data-tooltip="Fale conosco" hidden><svg class="icon-whatsapp" aria-hidden="true"><use href="#icon-whatsapp"></use></svg></a>
 </body>
 </html>

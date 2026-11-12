@@ -76,12 +76,18 @@ function getCartSubtotal() {
 function attachImageFallbacks(container) {
   container.querySelectorAll('img').forEach((image) => {
     image.addEventListener('error', () => {
+      const fallbackImage = image.dataset.fallback;
+      if (fallbackImage) {
+        image.removeAttribute('data-fallback');
+        image.src = fallbackImage;
+        return;
+      }
       const placeholder = document.createElement('span');
       placeholder.className = 'product-image-empty';
       placeholder.setAttribute('role', 'img');
       placeholder.setAttribute('aria-label', `Imagem de ${image.alt || 'produto'} indisponível`);
       image.replaceWith(placeholder);
-    }, { once: true });
+    });
   });
 }
 
@@ -128,7 +134,7 @@ function updateCartSummary() {
 
   if (mobileTotal) mobileTotal.textContent = formatMoney(getCartSubtotal());
   if (mobileCount) mobileCount.textContent = `${getCartCount()} ${getCartCount() === 1 ? 'item' : 'itens'}`;
-  if (mobileCart) mobileCart.hidden = getCartCount() === 0;
+  if (mobileCart) mobileCart.hidden = getCartCount() === 0 || Boolean(document.querySelector('.landing-quickbar'));
 
   if (state.cart.length === 0) {
     cartList.innerHTML = '<p class="empty-cart">Seu carrinho está vazio.</p>';
@@ -207,6 +213,7 @@ function addToCart(product, quantity = 1) {
 
   saveCart();
   updateCartSummary();
+  renderLandingFeaturedProducts();
   if (document.getElementById('productGrid')) renderProducts(getVisibleProducts());
 }
 
@@ -214,6 +221,7 @@ function removeFromCart(productId) {
   state.cart = state.cart.filter((item) => item.product.id !== productId);
   saveCart();
   updateCartSummary();
+  renderLandingFeaturedProducts();
   if (document.getElementById('productGrid')) renderProducts(getVisibleProducts());
 }
 
@@ -231,6 +239,7 @@ function changeQuantity(productId, delta) {
   item.quantity = Math.min(nextQty, maxStock);
   saveCart();
   updateCartSummary();
+  renderLandingFeaturedProducts();
   if (document.getElementById('productGrid')) renderProducts(getVisibleProducts());
 }
 
@@ -238,6 +247,7 @@ function clearCart() {
   state.cart = [];
   saveCart();
   updateCartSummary();
+  renderLandingFeaturedProducts();
   if (document.getElementById('productGrid')) renderProducts(getVisibleProducts());
 }
 
@@ -449,6 +459,76 @@ function getVisibleProducts() {
   return products;
 }
 
+function getLandingProductImageFallback(product) {
+  const category = normalizeText(product.categoryName);
+  if (/bebidas|cervejas|refrigerantes|destilados/.test(category)) return 'assets/images/domus-bebidas.jpg';
+  if (/churrasco|carvao/.test(category)) return 'assets/images/domus-churrasco.jpg';
+  if (/salgados|lanches|pao de queijo/.test(category)) return 'assets/images/domus-pao-de-queijo.jpg';
+  if (/congelados|refrigerados/.test(category)) return 'assets/images/domus-freezer.jpg';
+  return '';
+}
+
+function renderLandingFeaturedProducts() {
+  const grid = document.getElementById('landingFeaturedProducts');
+  if (!grid) return;
+
+  const products = state.products
+    .filter((product) => product.available === true && Number(product.stock) > 0)
+    .slice(0, 6);
+  if (!products.length) {
+    grid.innerHTML = '<p class="landing-products-status">Os produtos da loja estarão disponíveis em breve.</p>';
+    grid.setAttribute('aria-busy', 'false');
+    return;
+  }
+
+  grid.innerHTML = products.map((product) => {
+    const hasDiscount = product.promotion && Number(product.promotionalPrice) > 0 && Number(product.promotionalPrice) < Number(product.price || 0);
+    const price = getProductPrice(product);
+    const cartItem = getCartItem(product.id);
+    const quantity = cartItem?.quantity || 0;
+    const hasPrice = price > 0;
+    const imageFallback = getLandingProductImageFallback(product);
+    return `
+      <article class="product-card landing-product-card">
+        <div class="landing-product-image">
+          ${product.image ? `<img src="${escapeHTML(product.image)}"${imageFallback ? ` data-fallback="${escapeHTML(imageFallback)}"` : ''} alt="${escapeHTML(product.name)}" loading="lazy" decoding="async" />` : '<span class="product-image-empty" aria-hidden="true"></span>'}
+          ${hasDiscount ? '<span class="promo-badge">Promoção</span>' : ''}
+        </div>
+        <div class="product-body">
+          <div class="product-meta"><span>${escapeHTML(product.categoryName || 'Produtos')}</span></div>
+          <h3>${escapeHTML(product.name)}</h3>
+          <div class="product-price-row">
+            <div>${hasPrice ? (hasDiscount ? `<strong>${formatMoney(price)}</strong><span class="old-price">${formatMoney(product.price)}</span>` : `<strong>${formatMoney(price)}</strong>`) : '<strong>Consulte na loja</strong>'}</div>
+            <span class="unit-label">${escapeHTML(product.unit || 'unidade')}</span>
+          </div>
+          <button type="button" class="button button-primary" data-landing-add="${Number(product.id)}" ${quantity >= Number(product.stock) ? 'disabled' : ''}>${quantity ? `Adicionar mais (${quantity})` : 'Adicionar ao carrinho'}</button>
+        </div>
+      </article>
+    `;
+  }).join('');
+  grid.setAttribute('aria-busy', 'false');
+  attachImageFallbacks(grid);
+  grid.querySelectorAll('[data-landing-add]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const product = products.find((entry) => Number(entry.id) === Number(button.dataset.landingAdd));
+      if (product) addToCart(product, 1);
+    });
+  });
+}
+
+function applyLandingCategoryLinks(categories) {
+  const aliases = {
+    'pao de queijo e salgados': ['pao de queijo e salgados', 'salgados e lanches', 'salgados'],
+    'congelados e refrigerados': ['congelados e refrigerados', 'congelados', 'refrigerados']
+  };
+  document.querySelectorAll('[data-category-link]').forEach((link) => {
+    const requestedName = normalizeText(link.dataset.categoryLink);
+    const candidates = aliases[requestedName] || [requestedName];
+    const category = categories.find((entry) => candidates.includes(normalizeText(entry.name)));
+    if (category) link.href = `/shop.html?category=${Number(category.id)}#produtos`;
+  });
+}
+
 async function loadProducts() {
   try {
     const response = await fetch('/api/products');
@@ -464,12 +544,18 @@ async function loadProducts() {
     });
     saveCart();
     renderProducts(getVisibleProducts());
+    renderLandingFeaturedProducts();
     updateCartSummary();
   } catch (error) {
     console.error(error);
     const grid = document.getElementById('productGrid');
     if (grid) {
       grid.innerHTML = '<div class="empty-state"><strong>Não foi possível carregar os produtos.</strong><span>Verifique sua conexão e tente novamente.</span></div>';
+    }
+    const landingGrid = document.getElementById('landingFeaturedProducts');
+    if (landingGrid) {
+      landingGrid.innerHTML = '<p class="landing-products-status">Não foi possível carregar os produtos agora. Visite a loja para tentar novamente.</p>';
+      landingGrid.setAttribute('aria-busy', 'false');
     }
   }
 }
@@ -479,11 +565,17 @@ async function loadCategories() {
     const response = await fetch('/api/categories');
     const categories = await response.json();
     state.categories = categories;
+    applyLandingCategoryLinks(categories);
     const categoryChips = document.getElementById('categoryChips');
     if (categoryChips) {
+      const requestedCategory = new URLSearchParams(window.location.search).get('category');
+      const selectedCategory = categories.some((category) => String(category.id) === requestedCategory) ? requestedCategory : 'all';
       categoryChips.innerHTML = [
-        '<button type="button" class="category-chip is-active" data-category-filter="all" aria-pressed="true">Todas</button>',
-        ...categories.map((category) => `<button type="button" class="category-chip" data-category-filter="${Number(category.id)}" aria-pressed="false">${escapeHTML(category.name)}</button>`)
+        `<button type="button" class="category-chip ${selectedCategory === 'all' ? 'is-active' : ''}" data-category-filter="all" aria-pressed="${selectedCategory === 'all'}">Todas</button>`,
+        ...categories.map((category) => {
+          const isSelected = String(category.id) === selectedCategory;
+          return `<button type="button" class="category-chip ${isSelected ? 'is-active' : ''}" data-category-filter="${Number(category.id)}" aria-pressed="${isSelected}">${escapeHTML(category.name)}</button>`;
+        })
       ].join('');
       categoryChips.querySelectorAll('[data-category-filter]').forEach((button) => {
         button.addEventListener('click', () => {
